@@ -1,0 +1,228 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% I, the copyright holder of this work, release this work into the
+%% public domain. This applies worldwide. In some countries this may
+%% not be legally possible; if so: I grant anyone the right to use
+%% this work for any purpose, without any conditions, unless such
+%% conditions are required by law.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[
+  digital, %% The `digital` option enables the default options for the
+           %% digital version of a document. Replace with `printed`
+           %% to enable the default options for the printed version
+           %% of a document.
+%%  color,   %% Uncomment these lines (by removing the %% at the
+%%           %% beginning) to use color in the printed version of your
+%%           %% document
+  oneside, %% The `oneside` option enables one-sided typesetting,
+           %% which is preferred if you are only going to submit a
+           %% digital version of your thesis. Replace with `twoside`
+           %% for double-sided typesetting if you are planning to
+           %% also print your thesis. For double-sided typesetting,
+           %% use at least 120 g/m² paper to prevent show-through.
+  nolof,     %% The `lof` option prints the List of Figures. Replace
+           %% with `nolof` to hide the List of Figures.
+  nolot,     %% The `lot` option prints the List of Tables. Replace
+           %% with `nolot` to hide the List of Tables.
+]{fithesis4}
+%% The following section sets up the locales used in the thesis.
+\usepackage[resetfonts]{cmap} %% We need to load the T2A font encoding
+\usepackage[T1,T2A]{fontenc}  %% to use the Cyrillic fonts with Russian texts.
+\usepackage[
+  main=english, %% By using `czech` or `slovak` as the main locale
+                %% instead of `english`, you can typeset the thesis
+                %% in either Czech or Slovak, respectively.
+%   english, german, russian, czech, slovak %% The additional keys allow
+]{babel}        %% foreign texts to be typeset as follows:
+%%
+%%   \begin{otherlanguage}{german}  ... \end{otherlanguage}
+%%   \begin{otherlanguage}{russian} ... \end{otherlanguage}
+%%   \begin{otherlanguage}{czech}   ... \end{otherlanguage}
+%%   \begin{otherlanguage}{slovak}  ... \end{otherlanguage}
+%%
+%% For non-Latin scripts, it may be necessary to load additional
+%% fonts:
+\usepackage{paratype}
+\def\textrussian#1{{\usefont{T2A}{PTSerif-TLF}{m}{rm}#1}}
+%%
+%% The following section sets up the metadata of the thesis.
+\thesissetup{
+    date        = \the\year/\the\month/\the\day,
+    university  = mu,
+    faculty     = fi,
+    type        = mgr,
+    department  = Department of Computer Systems and Communications,
+    author      = Štěpán Horáček,
+    gender      = m,
+    advisor     = {Ing. Milan Brož, Ph.D.},
+    title       = {Hardware-encrypted disks in Linux},
+    TeXtitle    = {Hardware-encrypted disks in Linux},
+    keywords    = {keyword1, keyword2, ...},
+    TeXkeywords = {keyword1, keyword2, \ldots},
+    abstract    = {%
+      This is the abstract of my thesis, which can
+
+      span multiple paragraphs.
+    },
+    % thanks      = {%
+    %   These are the acknowledgements for my thesis, which can
+    %   span multiple paragraphs.
+    % },
+    bib         = bibliography.bib,
+    %% Remove the following line to use the JVS 2018 faculty logo.
+    facultyLogo = fithesis-fi,
+}
+\usepackage{makeidx}      %% The `makeidx` package contains
+\makeindex                %% helper commands for index typesetting.
+\usepackage[acronym]{glossaries}          %% The `glossaries` package
+\renewcommand*\glspostdescription{\hfill} %% contains helper commands
+\loadglsentries{glossary.tex}  %% for typesetting glossaries
+% \makenoidxglossaries                      %% and lists of abbreviations.
+%% These additional packages are used within the document:
+\usepackage{paralist} %% Compact list environments
+\usepackage{amsmath}  %% Mathematics
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{url}      %% Hyperlinks
+\usepackage{markdown} %% Lightweight markup
+\usepackage{listings} %% Source code highlighting
+\lstset{
+  basicstyle      = \ttfamily,
+  identifierstyle = \color{black},
+  keywordstyle    = \color{blue},
+  keywordstyle    = {[2]\color{cyan}},
+  keywordstyle    = {[3]\color{olive}},
+  stringstyle     = \color{teal},
+  commentstyle    = \itshape\color{magenta},
+  breaklines      = true,
+}
+\usepackage{floatrow} %% Putting captions above tables
+\floatsetup[table]{capposition=top}
+\usepackage[babel]{csquotes} %% Context-sensitive quotation marks
+\begin{document}
+
+\chapter{Introduction}
+% \markright{\textsc{Introduction}}
+% \addcontentsline{toc}{chapter}{Introduction}
+
+Just keeping the citations here, like~\cite{tcg-opal2}, \cite{linux-doc-inline}, \cite{sed-vulnerabilities}.
+
+\section{Thesis description}
+
+
+ The thesis aims to analyze existing approaches to using hardware-encrypted block devices (disks) in Linux and propose integrating such devices into the cryptsetup project.
+
+The implementation should use the Linux kernel interface.
+
+Student should
+\begin{itemize}
+    \item get familiar with and study available resources for self-encrypted drives, OPAL2 standard, block layer inline encryption,
+    \item analyze and describe security of such drives,
+    \item provide state-of-the-art overview of existing attacks,
+    \item implement proof-of-concept extension to cryptsetup project (and possibly propose changes for Linux kernel).
+\end{itemize}
+
+The student should be familiar with C code for low-level system programming and cryptography concepts. 
+
+\chapter{Hardware disk encryption}
+
+\emph{Hardware disk encryption} is a technology that provides confidentiality of data stored on a storage device using encryption provided by hardware.
+
+Some general overview about what it is, I guess., maybe talk about both sw and hw enc instead
+
+Describe generic stuff: provisioning, locking, key types DEK, KEK, MEK, processes, locking ranges vs. FDE, ... keyslots?,,, (and for opal TPer, SP, ..)
+
+mention LUKS somewhere...
+
+The disk encryption process can be conducted in logically and physically different places, depending on the type. In the following sections of this chapter, we will further describe three such types.
+
+\section{Self-encrypting drives}
+
+at least try to mention ATA security,,, which means also mentioning opal,,,, and TCG Enterprise...
+
+\section{Inline encryption hardware}
+
+Compared to the previously described self-encrypting drives, inline encryption hardware is separated from the disk, and 
+
+something about how it provides actually a way to check the encrypted content, right?
+
+\section{Software encryption}
+
+probably just a quick overview, ... maybe change the chapter to just "disk encryption"... or mention this just shortly at the start...
+
+\subsection{Linux stack}
+
+rethink where to put this... maybe tools?
+
+\paragraph{dm-crypt}
+
+\paragraph{fscrypt}
+
+\chapter{TCG Opal 2.0}
+
+TCG Opal SSC (Security Subsystem Class) 2.0 is a specification for storage devices, aiming to provide confidentiality of stored data while the disk implementing this specification is turned off~\cite{tcg-opal2}. The Opal standard is one of the representants of the self-encrypting drive approach to hardware disk encryption.
+
+
+developed by TCG (Trusted Computing Group)
+
+maybe move under the SED chapter, but it is probably going to be too big for that..., and important
+
+
+structure of the standards described in \url{https://trustedcomputinggroup.org/wp-content/uploads/TCGandNVMe_Joint_White_Paper-TCG_Storage_Opal_and_NVMe_FINAL.pdf}.
+
+
+
+\section{Technical stuff}
+
+I expect stuff here like important headers, codes, ...
+
+\subsection{Capability discovery discovery}
+
+
+begin with Level 0 discovery: \parencite[3.3.6]{tcg-storage-core} specifies the general security receives command for all TCG storage devices \cite[3.1.1]{tcg-opal2} specifies the Opal 2 specific parts of the header.
+
+\subsection{setup}
+\subsection{set locking range}
+\subsection{access...}
+\subsection{...}
+
+
+\section{Comparison with OPAL 1.0}
+
+OPAL 2 disks are \emph{optionally} backwards compatible.
+
+cite \url{https://trustedcomputinggroup.org/wp-content/uploads/TCG_Storage-Opal_SSC_FAQ.pdf}
+
+\section{Comparision with other TCG's SSC}
+
+Enterprise, Opalite, Pyrite, Ruby
+
+\chapter{Existing tools}
+
+\section{Cryptsetup}
+
+... tool for disk encryption setup.
+
+nothing for opal, right?
+
+\section{sedutil}
+
+supports opal, but the code seems to be abandoned
+
+\chapter{Security of hardware encryption}
+
+specify threat model, ,....,,, offline, online,,, offline multiple times???s
+
+.. maybe change position of this chapter, since it's splitting tools and change to a tool
+
+\section{Attacks on hardware encryption}
+
+\chapter{OPAL extension for cryptsetup}
+
+\chapter{Conclusion}
+
+
+
+\printbibliography[heading=bibintoc] %% Print the bibliography.
+
+\end{document}
