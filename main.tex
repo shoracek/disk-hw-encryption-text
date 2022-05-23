@@ -158,6 +158,95 @@ rethink where to put this... maybe tools?
 
 \paragraph{fscrypt}
 
+\chapter{fscrypt}
+
+Assuming ext4 in this chapter...
+
+\section{How to make it work?}
+
+As of now, blk-layer inline encryption is supported only by two filesystems in Linux: ext4 and F2FS.
+Need to use a kernel with \verb|CONFIG_FS_ENCRYPTION_INLINE_CRYPT| enabled.
+Need to first mount the filesystem with the inline encryption flag:
+\begin{lstlisting}[language=bash]
+mount -t ext4 /dev/foo /mnt/foo -o inlinecrypt
+\end{lstlisting}
+It is not enough to specify the inline encryption flag, the encryption itself also must be enabled. Assuming ext4 filesystem, the encryption can be enabled after mounting like so:
+\begin{lstlisting}[language=bash]
+tune2fs -O encrypt "/dev/loop0"
+\end{lstlisting}
+After this, \verb|fscrypt| can be used as normal and it will use inline encryption for this filesystem. 
+
+In order to encrypt a folder using a \verb|fscrypt|, the following must be done: an encryption key must be added and the encryption policy must be created.
+
+\begin{lstlisting}[language=c]
+int fd = open(pathname, O_RDONLY | O_CLOEXEC);
+
+struct fscrypt_add_key_arg *key_request = calloc(1, sizeof(struct fscrypt_add_key_arg) + key_len);
+struct fscrypt_policy_v2 policy_request = { 0 };
+
+// add a key
+key_request->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
+key_request->key_id = 0;
+key_request->raw_size = key_len;
+memcpy(key_request->raw, key, key_len);
+ioctl(fd, FS_IOC_ADD_ENCRYPTION_KEY, key_request);
+
+// set a policy
+policy_request.version = 2;
+policy_request.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
+policy_request.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
+policy_request.flags = FSCRYPT_POLICY_FLAGS_PAD_8 | FSCRYPT_POLICY_FLAGS_PAD_16 | FSCRYPT_POLICY_FLAGS_PAD_32;
+memcpy(policy_request.master_key_identifier, key_request->key_spec.u.identifier, FSCRYPT_KEY_IDENTIFIER_SIZE);
+ioctl(fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy_request);
+\end{lstlisting}
+
+This code sets up an encryption policy for the file specified by the pathname. 
+
+\section{How does it work?}
+
+\subsection{Setup}
+
+During mounting the ``inlinecrypt''/\verb|SB_INLINECRYPT|  flag is written into the \verb|super_block| structure.
+
+It all starts in \verb|__ext4_new_inode|. This is the internal function used when creating new inodes, called by functions such as \verb|ext4_create| when creating a new file.
+
+The function (if it is not inode used for large extended attributes?) calls \verb|fscrypt_prepare_new_inode|.
+
+\verb|fscrypt_prepare_new_inode -> fscrypt_setup_encryption_info ->| \verb|setup_file_encryption_key ->  fscrypt_select_encryption_impl|
+
+In \verb|fscrypt_select_encryption_impl| there is actually the only place where the \verb|SB_INLINECRYPT| flag is used.
+... Calls \verb|blk_crypto_config_supported| to check the device's crypto profile.
+Afterwards, \verb|fscrypt_select_encryption_impl| function sets the \verb|(fscrypt_info *)ci->ci_inlinecrypt|.
+
+\verb|setup_per_mode_enc_key| then sets the \verb|(fscrypt_info *)ci->ci_enc_key|.
+
+\subsection{Usage}
+
+The bio function is stored in \\ \verb|(struct bio *)bio->(struct bio_crypt_ctx *)bi_crypt_context|
+
+Function \verb|fscrypt_set_bio_crypt_ctx| changes the file's bio to use inline encryption... simply calls the blk layer \verb|bio_crypt_set_ctx|.
+
+Calling \verb|submit_bio| like normally ... \verb|__submit_bio| calls \verb|__blk_crypto_bio_prep|...
+
+\blockquote{If the bio crypt context provided for the bio is supported by the underlying device's inline encryption hardware, do nothing.}
+
+\verb|__blk_crypto_rq_bio_prep| however sets the context of the request to the one of the bio... 
+After the bio prep  \verb|blk_mq_submit_bio| gets called (which calls \verb|blk_mq_bio_to_request|, and after that also \verb|blk_crypto_init_request->blk_crypto_get_keyslot| which updates the devices keyslot to contain the new key..., but does nothing if the device does not have keyslots)..... the info about the key to use then has to be acquired by the driver from \verb|request->|
+
+
+Most important are probably structures \verb|blk_crypto_ll_ops| and \verb|blk_crypto_profile|... just two operations, program key and evict key. 
+
+
+
+how to get crypto profile from outside..
+
+
+
+
+Where does the hardware come to play?
+
+\verb|ufshcd_exec_raw_upiu_cmd()->ufshcd_issue_devman_upiu_cmd()->ufshcd_prepare_req_desc_hdr()->ufshcd_prepare_req_desc_hdr_crypto()| sets the header with the correct keyslot.
+
 \chapter{TCG Opal 2.0}
 
 TCG Opal SSC (Security Subsystem Class) 2.0 is a specification for storage devices, aiming to provide confidentiality of stored data while the disk implementing this specification is turned off~\cite{tcg-opal2}. The Opal standard is one of the representants of the self-encrypting drive approach to hardware disk encryption.
