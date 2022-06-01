@@ -251,7 +251,6 @@ Where does the hardware come to play?
 
 TCG Opal SSC (Security Subsystem Class) 2.0 is a specification for storage devices, aiming to provide confidentiality of stored data while the disk implementing this specification is turned off~\cite{tcg-opal2}. The Opal standard is one of the representants of the self-encrypting drive approach to hardware disk encryption.
 
-
 developed by TCG (Trusted Computing Group)
 
 maybe move under the SED chapter, but it is probably going to be too big for that..., and important
@@ -265,10 +264,40 @@ structure of the standards described in \url{https://trustedcomputinggroup.org/w
 
 I expect stuff here like important headers, codes, ...
 
-\subsection{Capability discovery discovery}
+SP = service provider, tables and methods that operate upon them
 
+\subsection{Capability discovery}
 
 begin with Level 0 discovery: \parencite[3.3.6]{tcg-storage-core} specifies the general security receives command for all TCG storage devices \cite[3.1.1]{tcg-opal2} specifies the Opal 2 specific parts of the header.
+
+\subsection{sessions}
+
+In order to facilitate communication between the host and SP, sessions must be used. During these sessions, methods are used...
+
+example of method: 
+
+\begin{lstlisting}
+SMUID.StartSession [
+HostSessionID : uinteger,
+SPID : uidref {SPObjectUID},
+Write : boolean,
+HostChallenge = bytes,
+HostExchangeAuthority = uidref {AuthorityObjectUID},
+HostExchangeCert = bytes,
+HostSigningAuthority = uidref {AuthorityObjectUID},
+HostSigningCert = bytes,
+SessionTimeout = uinteger,
+TransTimeout = uinteger,
+InitialCredit = uinteger,
+SignedHash = bytes ]
+=>
+SMUID.SyncSession [ see SyncSession definition in 5.2.3.2]
+\end{lstlisting}
+
+Each method call is defined by the caller UID, method UID, and values of its parameters.
+The method calls are coded using tokens... start list, end list, optional argument start, ... short int, long int,....
+
+To call a method use IF-SEND command, to get result of the method call use IF-RECV command.
 
 \subsection{setup}
 \subsection{set locking range}
