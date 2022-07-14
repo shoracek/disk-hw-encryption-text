@@ -270,6 +270,10 @@ SP = service provider, tables and methods that operate upon them
 
 begin with Level 0 discovery: \parencite[3.3.6]{tcg-storage-core} specifies the general security receives command for all TCG storage devices \cite[3.1.1]{tcg-opal2} specifies the Opal 2 specific parts of the header.
 
+The Opal 2 feature header contains several important information usable in the future usage of the device. Most importantly the base ComID~\cite[3.3.2]{tcg-storage-core}. 
+
+ComID are divided into static and dynamic (managed by ComID management).
+
 \subsection{sessions}
 
 In order to facilitate communication between the host and SP, sessions must be used. During these sessions, methods are used...
@@ -299,8 +303,19 @@ The method calls are coded using tokens... start list, end list, optional argume
 
 To call a method use IF-SEND command, to get result of the method call use IF-RECV command.
 
+In order to authentize the user, one can use many different ...
+
+
+
+Methods are sent using packets. There are three types of packets: ComPackets, packets and subpackets. A single ComPacket can contain multiple packets and single packet can contain multiple subpackets. Each ComPacket is associated with a single ComID, each packet is associated with a single session.
+
+
+
 \subsection{setup}
 \subsection{set locking range}
+
+global locking range is a special locking range that protects LBAs not protected by any of the other locking ranges.
+
 \subsection{access...}
 \subsection{...}
 
@@ -338,6 +353,192 @@ specify threat model, ,....,,, offline, online,,, offline multiple times???s
 \chapter{OPAL extension for cryptsetup}
 
 \chapter{Conclusion}
+
+\chapter{Notes}
+
+Write/read on locked range returns "Input/output error".
+
+tested disks:
+\begin{itemize}
+    \item SanDisk SD7UB2Q5
+    \item Samsung SSD 850
+    \begin{itemize}
+        \item problems with user authentication
+    \end{itemize}
+\end{itemize}
+
+ATA drives need \verb|libata.allow_tpm| set to 1,,, but why?
+
+templates --- base, locking,, -> SPs. Service providers of the trusted peripherals are issued based on templates.
+
+Global locking range is a special locking range that controls any area of the disk that is not controlled by any other locking range.
+
+Shadow MBR allows FDE disk pre-boot. Presents ``fake'' MBR that can unlock the disk, on successful unlocking hands the control over to the real MBR.
+
+key types (Credential Table Group): \begin{itemize}
+    \item \verb|C_PIN| --- password
+    \item \verb|C_RSA_*| --- signing arbitrary input???, session startup
+    \item \verb|C_EC_*| --- ec-mqv, ec-dh session startup
+    \item \verb|C_AES_*|
+    \item \verb|C_HMAC_*|
+\end{itemize}
+
+5.3.4.1.3
+
+authority operations: 
+\begin{itemize}
+    \item None --- does not authenticate
+    \item Password --- authenticated using a pin
+    \item Sign --- challenge and response
+    \item Exchange
+    \item SymK
+    \item HMAC
+    \item TPerSign
+    \item TPerExchange
+\end{itemize}
+
+Sessions may use secure messaging: 
+use additionaly a start/synctrustedsession methods for challange-response/key exchange
+
+CVE-2018-12037  --- ``An issue was discovered on Samsung 840 EVO and 850 EVO devices (only in "ATA high" mode, not vulnerable in "TCG" or "ATA max" mode), \dots'' --- wtf is ata high/ata max mode???
+
+CVE-2018-12038
+
+
+s \\
+e \\
+p \\
+a \\
+r \\
+a \\
+t \\
+o \\
+r \\
+
+
+
+All that follows is from the core standard\cite{tcg-storage-core}.
+
+
+single user mode --- feature set that ``locks'' the admin out --- admin can do only destructive actions upon the locking range, and only the user can actually unlock it
+
+
+
+
+Trusted Computing Group (TCG), “Storage Work Group Use Case White Paper – v 1.0” \\
+opal --- ``for corporate''
+opalite --- worse opal, only global range, less admins and uesrs \\
+pyrite --- non-encrypted opalite, only logical access control \\
+enterprise --- only global range, no psid, no configurable access control, no pre-boot authentication, for scsi data centers devices
+
+``Data confidentiality and access control over TPer features and capabilities: \dots The protection provided by this
+exclusive access extends to confidentiality of instructions and data in transit between the
+trusted host application (or a TPM it uses) and the TPer''
+
+
+secure messaging
+
+sessions are using readers-writers lock.
+
+SPs are combinations of templates, must contain base template (). other templates admin, clock, crypto, locking, log
+
+``All SPs incorporate at least a subset of the Base Template’s tables and methods.'' -> is $\emptyset$ enough???
+
+issuance = new SP from templates, personalization = customization of newly created SP (but can happen anytime...), initial data, authorities, 
+
+SSC = ... ``A TPer MAY have only some of the capabilities (tables, methods, access controls, etc.) defined in this
+Core Specification and MAY include additional capabilities through table definitions and/or methods. A
+Security Subsystem Class SHALL NOT replace a capability called out in the Core Specification with the
+same capability implemented in different tables, methods, and access controls.''
+
+stream encoding - methods and tokens...,TLV...
+
+tables -- bytes tables -- raw data, just bytes (rows addressed by row number); object tables (rows addressed by uid, SP-unique, non-reusable, for anti-spoofing)
+
+object = row of table
+
+SP templates -- base, admin, clock, crypto, locking, log,
+
+
+interface -- protocol-independent, IF-SEND, IF-RECV commands 
+
+COMID
+
+ComID identifies the caller, each application has different ComID and therefore can communicate simultaneously, dynamic, static. Not a session, multiple sessions may use single comid. Then there are some states and transitions, active, associated, issued... Extended ComID for reusing ComID so that we can see if it is the old ComID or the new one (using extra two bytes).
+
+PROTOCOL LAYERS
+
+protocol layers --- session, management, communication, tper, interface, transport
+(... the standard seems to imply that the comid is always managed??)
+
+DISCOVERY
+
+discovery levels : 3.3.5 : level 0 , level 1 Properties method of TPer, level 2 of SP
+
+SESSIONS
+
+sessions: regular and control (not going to care about control much, just between TPer session manager and host session manager); read/read-write mutexes..., 
+
+session manager methods - properties, start/sync session, start/sync trusted session, close session
+
+*trustedsession - used with PuK, SymK, and HMAC authorities, secure messaging
+
+authorities -- used during session startup,,, host exchange authority -- exchange of session keys, implicit authentication;;; host signing authority -- challenge response authentication/startup method integrity, \verb|C_PIN| (password), , ,,, same for host->SP
+
+METHODS
+
+TRANSACTIONS 
+
+--- like in database, commiting , etc.... optional (or implicit transaction on method level...), nested transaction commited when outermost finished, possible exceptions to rollbacks e.g. logs
+
+Stream Flow Control -- interface (handles  sending IF-SEND/RECV commands across the interface ) and stream data (handles not overwhelming host and TPer) types;;; uses Credit Control Subpacket to signify the opposite device that it is ready to receive data (and how much)
+
+Session Reliability --- ACKs, NACKs (SeqNumbers), timeouts,,, all optional
+
+Synchronous Interface Communications --- alternative to the previous asynchronous communication... to make it more simple,,,, so IF-SEND to make TPer do something, IF-RECV to get the result, repeat ad nauseam
+
+
+SP OPERATIONS
+
+Special SP - admin SP -- maintains info about TPer and other SPs
+
+SP -- Cartesian product of template (defining tables and methods, pretty sure I wrote about it earlier, but it is mentioned in the standard again) subsets, 
+
+ACCESS CONTROL
+
+invoker may have to know secret (secret + public part = Credentials, operation of proving knowledge = Authentication Operation, proving knowledge = Authentication )
+
+explicit authentication - e.g. password validation, challenge response,,,
+implicit authentication - e.g session key exchange
+
+authority --- object in authority table, type is individual or class (afaik just a bunch of individual authorities,, so that they may be easily changed at once, OR of all the individuals)
+
+Access control -- access control list consists of access control elements (boolean combination of authorities),,,
+each SP has AdminExch authority,,, 
+ACEs seem to be able to have different "owners",,,
+
+ISSUANCE
+
+issuance -- creation of SP from template, from admin SP, ,,,
+personalization --- after issuance, ussing the adminexch authority of the new sp, fill in tables, set access control... etc
+
+LIFE CYCLE
+
+... can be disabled (still can authenticate, deleteSP and set get on SPinfo (to enable)), frozen (any attempt to open session fails)
+
+
+s \\
+e \\
+p \\
+a \\
+r \\
+a \\
+t \\
+o \\
+r \\
+
+... And that§s the introduction... what follows now is the method and table overview...
+
 
 
 
