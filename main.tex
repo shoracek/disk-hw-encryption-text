@@ -420,16 +420,47 @@ r \\
 All that follows is from the core standard\cite{tcg-storage-core}.
 
 
+
+\hline
+
+\subsection{Trusted Peripheral}
+
+Trusted peripheral (TPer) is a device located on the disk that procures the security of the data on disk.
+
+\subsection{Security Provider}
+
+A TPer consists of multiple Security providers (SP). SPs are defined as a set of tables, methods and an access control. Each SP is derived from a set of templates. These templates define ...
+
+\hline
+
+Security Provider (SP) --- tables, methods, access control
+
+secure messaging --- integrity/authentication and/or confidentiality,,,,
+
+
 single user mode --- feature set that ``locks'' the admin out --- admin can do only destructive actions upon the locking range, and only the user can actually unlock it
 
 
 
+\hline
+
+\subsection{Other subsystems/Structure of the standard}
+
+The Opal standard is defined as a subsystem extending the TCG Storage Core standard. The TCG Storage Core standard specifies the core features and proprieties shared among several different types of subsystems, that extend the core functionality by specifying additional or mandatory features, each subsystem focused on a different use case. These subsystems are namely: \begin{itemize}
+    \item Opal --- targeted at the corporate usage. Described more closely in the rest of the thesis.
+    \item Opalite --- simplified Opal. Removes features such as locking ranges, decreases number of mandatory admins, users.
+    \item Pyrite --- similar to Opalite, however does not require encryption, and instead offers only logical access control.
+    \item Ruby --- subsystem focused on data centers and server drives. Offers only global range encryption, weaker configuration of access control, no pre-boot authentication support. Replacing older Enterprise subsystem. 
+\end{itemize}
+
+\hline
 
 Trusted Computing Group (TCG), “Storage Work Group Use Case White Paper – v 1.0” \\
 opal --- ``for corporate''
-opalite --- worse opal, only global range, less admins and uesrs \\
+opalite --- simplified/worse opal, only global range, less admins and uesrs \\
 pyrite --- non-encrypted opalite, only logical access control \\
-enterprise --- only global range, no psid, no configurable access control, no pre-boot authentication, for scsi data centers devices
+enterprise --- only global range, no psid, no configurable access control, no pre-boot authentication, for scsi data centers devices, server drives
+new - ruby --- replacing enterprise... enterprise + datacenter
 
 ``Data confidentiality and access control over TPer features and capabilities: \dots The protection provided by this
 exclusive access extends to confidentiality of instructions and data in transit between the
@@ -462,6 +493,15 @@ SP templates -- base, admin, clock, crypto, locking, log,
 
 interface -- protocol-independent, IF-SEND, IF-RECV commands 
 
+\hline
+
+\section{Communication}
+
+ComID is a number identifying the caller (e.g. application of the host). ComID ensures that responses will be received by the correct application, since there can be at one time multiple callers.
+
+
+\hline
+
 COMID
 
 ComID identifies the caller, each application has different ComID and therefore can communicate simultaneously, dynamic, static. Not a session, multiple sessions may use single comid. Then there are some states and transitions, active, associated, issued... Extended ComID for reusing ComID so that we can see if it is the old ComID or the new one (using extra two bytes).
@@ -489,6 +529,14 @@ METHODS
 
 TRANSACTIONS 
 
+\hline
+
+\subsection{Transactions}
+
+In order to facilitate safe execution of sequences of methods, the standard specifies transactions. Similarly to transactions in database systems, this feature enables one to revert effects of sequence of methods. This is done automatically in case the transaction is not finished, or if the transaction is manually aborted. However, not all the effects of methods are rolled back, such as logs. Nested transactions are supported, in which case the transaction is commited when the outermost transaction is finished.
+
+\hline
+
 --- like in database, commiting , etc.... optional (or implicit transaction on method level...), nested transaction commited when outermost finished, possible exceptions to rollbacks e.g. logs
 
 Stream Flow Control -- interface (handles  sending IF-SEND/RECV commands across the interface ) and stream data (handles not overwhelming host and TPer) types;;; uses Credit Control Subpacket to signify the opposite device that it is ready to receive data (and how much)
@@ -506,6 +554,18 @@ SP -- Cartesian product of template (defining tables and methods, pretty sure I 
 
 ACCESS CONTROL
 
+\hline
+
+\subsection{Access Control}
+
+In order to provide access to methods only to authorized actors, the standard also defines access control. The access control provided a way to allow access to methods of the SP only after a knowledge of a secret has been proved. Information required to verify knowledge of the secret is called a credential and is stored in one of the corresponding SP's credential table. Each SP may contain several credential tables, one for each type of credential, such as pin, RSA key pair, or AES key.
+
+In order to support authentication of more than one user or require multiple users at once access control rules are defined using Access Control Lists (ACL) containing Access Control Elements (ACE). Each entry in an ACL has an owner \dots. ACEs are Boolean expressions with inputs being authentication of authorities.
+
+Other than an explicit authentication, an implicit authentication is also possible. In this authentication, the knowledge of secret is shown by successfully using encrypted communication channel.
+
+\hline
+
 invoker may have to know secret (secret + public part = Credentials, operation of proving knowledge = Authentication Operation, proving knowledge = Authentication )
 
 explicit authentication - e.g. password validation, challenge response,,,
@@ -517,6 +577,14 @@ Access control -- access control list consists of access control elements (boole
 each SP has AdminExch authority,,, 
 ACEs seem to be able to have different "owners",,,
 
+\hline
+
+\subsection{SP Issuance}
+
+SP issuance is the process of creation of a new SP from a base template and a set of other templates. After an SP is issued, it can be personalized. Personalization of an SP is the process of 
+
+\hline
+
 ISSUANCE
 
 issuance -- creation of SP from template, from admin SP, ,,,
@@ -524,7 +592,7 @@ personalization --- after issuance, ussing the adminexch authority of the new sp
 
 LIFE CYCLE
 
-... can be disabled (still can authenticate, deleteSP and set get on SPinfo (to enable)), frozen (any attempt to open session fails)
+... SP can be disabled (still can authenticate, deleteSP and set get on SPinfo (to enable)), frozen (any attempt to open session fails)
 
 
 s \\
@@ -539,6 +607,22 @@ r \\
 
 ... And that§s the introduction... what follows now is the method and table overview...
 
+
+.....
+
+\hline
+
+\subsection{Templates}
+
+The standard specifies several templates that can be used to create SPs.
+
+\hline
+
+Base Template --
+
+Crypto Template ---- operates on Credential tables (the previously mentioned \verb|C_*|, tables of other SPs,,,), can do enc, dec, sig, ver, hash, hmac, xor
+
+Locking Template ------ provides access control
 
 
 
