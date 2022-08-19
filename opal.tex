@@ -1,0 +1,250 @@
+\chapter{TCG Opal 2.0}
+
+TCG Opal Security Subsystem Class (SSC) 2.0 (hereinafter referred to simply as ``Opal'') is a specification for storage devices, aiming to provide confidentiality of stored data while the conforming disk is turned off~\cite{tcg-opal2}. It is one of the representatives of the self-encrypting drive approach to hardware disk encryption.
+
+Developed in 2012 by Trusted Computing Group (TCG) as a successor of Opal 1.0.
+
+\section{Structure of the standard}
+
+The Opal 2.0 standard is defined as a subsystem extending the TCG Storage Architecture Core Specification standard. The TCG Storage Architecture Core Specification standard~\cite{tcg-storage-core} specifies the core features and properties shared among several different types of storage security subsystems, that extend the core functionality by specifying additional features or define the set of mandatory features. Each of these subsystems is focused on a different use case. These subsystems are namely: \begin{itemize}
+    \item Opal --- targeted at a corporate and personal usage. Described more closely in the rest of this chapter.
+    \item Opalite --- simplified Opal. Does not mandate features such as locking ranges, decreases the minimal number of admin and user authorities~\cite{tcg-opalite}. % smaller datastore also, i think
+    \item Pyrite --- encryption-less Opalite. Similar to Opalite, however it does not mandate encryption, and instead may offer only logical access control~\cite{tcg-pyrite}.
+    \item Ruby --- focused on data centers and server drives. Offers only global range encryption, weaker configuration of access control, no pre-boot authentication support~\cite{tcg-ruby}. Replacing the older Enterprise subsystem.
+\end{itemize}
+
+\section{Architecture}
+
+The standard defines several parts of the trusted device.
+
+\subsection{Trusted Peripheral}
+
+Trusted peripheral (TPer) is a device located on the disk that provides the security of the data on disk. A TPer consists of multiple Security Providers.
+
+\subsection{Security Provider}
+
+Security Provider (SP) is defined as a set of tables, methods and an access control. Each SP is derived from a set of templates. These templates define a set of the tables and methods, aimed at one functionality, subset of which the SP implements. The templates are described more closely in later chapter \ref{TODO}.
+The Opal 2.0 standard defines that at least the Admin SP and Locking SP must be present in the TPer. The Admin SP tasked with administrating the TPer and other SPs, which may include creating new SPs, deleting existing SPs, or providing information about SPs. The Locking SP provides access to functionality such as managing locking ranges, locking the drive, or managing access control. Both of these SPs are described more closely in later chapter \ref{TODO}.
+
+\section{Capability discovery}
+
+In order to find out the properties and features of a particular device, there exists the so called Discovery process. This process is divided into three levels, each with different reported information and a different approach to access the information.
+
+\subsection{Level 0 discovery}
+
+Level 0 discovery provides basic information about the secure device, and is performed using only the secure send and secure receive commands of the device. The information is provided through feature descriptor. The presence of the feature descriptor header means that the feature is supported and the fields of the header describe the basic properties of that feature.
+
+Some of the features described by these descriptors are the TPer feature (supported communication features such as ack/nack support, comid managment, buffer managment, async communication, ...), Locking (whether disk is locked, etc.), Geometry feature (parameters of the disk, such as block size), Opal V1.0 feature, SingleUser feature (...), DataStore (size of the table), OPAL 2.0 feature (base ComID, number of ComIDs, default pin, number of locking users/admins).
+
+\subsection{Level 1 discovery}
+
+Level 1 discovery provides more thorough information about the TPer, and is performed using the \verb|Properties| control session method.
+
+The reported properties are:
+\verb|MaxMethods|, 
+\verb|MaxSubpackets|, 
+\verb|MaxPacketSize|, 
+\verb|MaxPackets|,
+\verb|MaxComPacketSize|,
+\verb|MaxResponseComPacketSize|, 
+\verb|MaxSessions|, 
+\verb|MaxReadSessions|, 
+\verb|MaxIndTokenSize|, 
+\verb|MaxAggTokenSize|,
+\verb|MaxAuthentications|, 
+\verb|MaxTransactionLimit|, 
+\verb|DefSessionTimeout|,  
+\verb|MaxSessionTimeout|,
+\verb|MinSessionTimeout|, 
+\verb|DefTransTimeout|, 
+\verb|MaxTransTimeout|,
+\verb|MinTransTimeout|,
+\verb|MaxComIDTime|,
+\verb|ContinuedTokens|,
+\verb|SequenceNumbers|, 
+\verb|AckNak|, 
+\verb|Asynchronous|, 
+
+
+\subsection{Level 2 discovery}
+
+provided by the \verb|Get| method of SP. This includes reading any table, such as the access control table or table of locking ranges. Some of the SPs' tables are described in later chapter~\ref{TODO}.
+
+
+\section{Communication}
+
+In order to send commands to the TPer or the SPs and receive responses, a specific protocol must be used. % TODO: Rephrase this...
+The protocol is split into several layers. The high level method calls, optional transactions, and sessions, which are carried by the interface commands.
+((It's actually session, management, communication, TPer, interface, transport, in different part, fixup TODO.))
+
+One of the information required in order to send a command is the ComID, a number identifying the caller (e.g. application of the host). It ensures that responses to method calls will be received by the correct application, since there can be at one time multiple callers. This number can be acquired through the level 0 discovery process.
+
+The communication is based on packets. ComPacket is the primary one, each ComPacket contains data for communication under only a single ComID. Each ComPacket can contain several Packets. The usage of Packet is intended for session reliability, specifying sequential numbers and the acknowledgements for them. Every Packet then consists of one or more SubPackets. Finally, SubPacket contains one or more method calls, or results of method calls.
+
+
+\subsection{Method calls}
+
+The data of the SubPacket carries either the method call or method response. %can't there be something else?
+These are expressed using a set of tokens in a specific order.
+
+structure is: \\
+\verb# CALL_TOKEN | OBJECT_UID | METHOD_UID# \\
+\verb#| START_LIST_TOKEN | ARGUMENTS | END_LIST_TOKEN | END_OF_DATA_TOKEN# \\
+\verb#| START_LIST_TOKEN | ERROR_VALUE | END_LIST_TOKEN | #
+
+the response is identical to the call and different arguments are used as a way of passing back information
+
+object uid can be SP, table, row of table of a special object uid SMUID --- session manager, used for session management
+
+mandatory arguments: \\
+\verb#  #
+
+optional arguments: \\
+\verb# START_NAME_TOKEN | ARGUMENT_ID | ARGUMENT_VALUE | END_NAME_TOKEN # 
+
+
+\subsection{Sessions}
+
+Sessions can be possibly intertwined even on one ComID
+
+Sessions are using readers-writer lock.
+
+sessions: regular and control (not going to care about control much, just between TPer session manager and host session manager); read/read-write mutexes..., 
+
+session manager methods - properties, start/sync session, start/sync trusted session, close session
+
+before session one can use the properties method to find a common ground for the capabilities of both host and the Opal device. Some of the values that are agreed upon are the maximum packet size, ...
+
+*trustedsession - used with PuK, SymK, and HMAC authorities, secure messaging
+
+\subsection{Transactions}
+
+In order to facilitate safe execution of sequences of methods, the standard specifies transactions. Similarly to transactions in database systems, this feature enables one to revert effects of sequence of methods. This is done automatically in case the transaction is not finished, or if the transaction is manually aborted. However, not all the effects of methods are rolled back, such as logs. Nested transactions are supported, in which case the transaction is committed when the outermost transaction is finished.
+
+
+\subsection{Optional features}
+
+Note that some of the features described in the previous sections are optional. Even though every Opal device supports sessions, the minimum required maximum number of sessions is 1, ...
+
+From our experience with Opal disks, most of them implemented only the required minimum <TODO: fact check later on>.
+
+Note that even though in the previous sections it is said that there can be multiple methods per subpacket, or ... these features are all optional. Opal mandates only at least 1 sessions, 1 method per packet, 1 transaction, 1 packet per compacket, 1 subpacket per packet, and so on.
+
+
+
+
+
+Even though the protocol specifies and can support many features such as secure messaging, asynchronous communication, or session reliability, these features are not mandatory for the Opal subsystem.
+
+\section{Features}
+
+move probably under templates,,, or even better SP?
+
+\subsection{Single user mode}
+
+feature set that ``locks'' the admin out --- admin can do only destructive actions upon the locking range, and only the user can actually unlock it
+
+\subsection{MBR shadowing}
+
+This feature enables the disk to provide a fake master boot record (MBR). Instead of the MBR saved on the disk, the disk instead provides the saved shadow MBR on bootup. The shadow MBR may contain a software to authenticate the user to the disk and unlock it. After the shadow MBR is used, it can be deactivated by setting MBR done in the MBRControl table.
+
+The minimal maximum size of the shadow MBR seems to be 0x08000000 bytes ($\sim$134 MB).
+
+Move to locking SP.
+
+
+
+\subsection{Access Control}
+
+In order to provide access to methods only to authorized actors, the standard also defines access control. The access control provides a way to allow access to methods of the SP only after a knowledge of a secret has been proved. Information required to verify knowledge of the secret is called a credential and is stored in one of the corresponding SP's credential table. Each SP may contain several credential tables, one for each type of credential, such as pin, RSA key pair, or AES key.
+
+In order to support authentication of more than one user or require multiple users at once access control rules are defined using Access Control Lists (ACL) containing Access Control Elements (ACE). Each entry in an ACL has an owner \dots. ACEs are Boolean expressions with inputs being authentication of authorities.
+
+
+% Access control -- access control list consists of access control elements (boolean combination of authorities),,,
+% each SP has AdminExch authority,,, 
+% ACEs seem to be able to have different "owners",,,
+
+Other than an explicit authentication, an implicit authentication is also possible. In this authentication, the knowledge of secret is shown by successfully using encrypted communication channel.
+
+authority --- object in authority table, type is individual or class (afaik just a bunch of individual authorities,, so that they may be easily changed at once, OR of all the individuals)
+
+
+\section{Templates}
+
+Since SPs may share some of their functionality such as authentication, modification of tables, or retrieval of data from tables, there exists templates to define this shared functionality. Each of the SP then implements a subset of functionality of one or more templates.
+
+\subsection{Base template}
+
+The base template defines the shared subset required by every SP, and is therefore mandatory. The most important functionality that is defined by this template is access control.
+
+\subsection{Admin template}
+
+specific for admin SP
+
+\subsection{Crypto template}
+
+defines cryptographic methods
+
+\subsection{Locking template}
+
+specific for the locking SP
+
+\section{Admin SP}
+
+holds information about the TPer and SPs, allows modification/creation/deletion of other SPs
+
+unique
+
+\subsection{Methods}
+
+\section{Locking SP}
+
+Locking SP procures the disk encryption and the locking and unlocking associated with it. This means that it provides access to manipulation of locking ranges, key generation and ...
+
+unique
+
+\subsection{Locking range}
+
+The locking range feature gives the user a way to specify an LBA range on the disk that can be locked independently on the rest of the disk. Each locking range has also it's own ACE, to control who can lock and unlock the range, and it's own DEK.
+
+There also always exists a special range called global locking range that is covering any area on disk that is not already covered by a regular locking range.
+
+\section{Implementations/Direct usage/something like this}
+
+
+\subsection{Linux ioctl}
+
+Since version 4.11 Linux offers an ioctl to facilitate control over an OPAL disk. Although these ioctl commands offer a simple access to control of the disk, not every feature is implemented, ...
+
+offer only basic commands: 
+\begin{itemize}
+\item \verb|SAVE| --- something with suspend...
+\item \verb|LOCK_UNLOCK| --- locks/unlocks a locking range
+\item \verb|TAKE_OWNERSHIP| --- initialisation of a TPer, sets up pins
+\item \verb|ACTIVATE_LSP| ---change state from "Manufactured-Inactive" to "Manufactured" state. 
+\item \verb|SET_PW| --- change pw
+\item \verb|ACTIVATE_USR| --- sets up an user (change password without old password)
+\item \verb|REVERT_TPR| --- reverts TPer to manufactured state
+\item \verb|LR_SETUP| --- sets locking range position/locking enable
+\item \verb|ADD_USR_TO_LR| --- adds a user to the LR ACE (TODO: they seem to set it to "\verb#(user_uid || user_uid)#"??? why? bug?)
+\item \verb|ENABLE_DISABLE_MBR| --- 
+\item \verb|ERASE_LR| --- calls the erase method, 00 00 06 00 00 08 03, can't find it in opal and in core it's "reserved for SSC"
+\item \verb|SECURE_ERASE_LR| --- regenerate the key to destroy the previous one
+\item \verb|PSID_REVERT_TPR| --- resets the TPer using PSID
+\item \verb|MBR_DONE| --- 
+\item \verb|WRITE_SHADOW_MBR| --- 
+\item \verb|GENERIC_TABLE_RW| --- read/write from/to byte table. no structured table, or iteration based table...
+\end{itemize}
+
+no documentation
+
+currently limited to 1 admin, 9 users (admin is "user0"), no "write only" lock, only basic binary table read (e.g. no iterations, no structured tables)
+
+\subsection{Direct communication}
+
+Alternative to the OPAL ioctl are disk controller ioctls. Depending on the disk protocol, a different way of passing the OPAL commands is required, such as using \verb|SG_IO| ioctl and \verb|sg_io_hdr_t| structure for SCSI disks or \verb|NVME_IOCTL_ADMIN_CMD| ioctl and \verb|nvme_admin_cmd| structure for NVMe disks. Using these structures, the OPAL commands described in chapter \ref{TODO} can be sent to the TPer. Compared to the OPAL ioctl this has the advantage of not being limited only to a subset of features that the OPAL ioctl implements, and instead being able to use every OPAL feature the device offers. This is not limited only to \dots (e.g. improve performance by using optional features such as concurency, etc, described earlier) \dots
+
+Although this gives the user access to every feature of the OPAL disk, it also requires them not only to implement the command hand-over for each type of disk separately, but also to create the methods and parse the method results, both described in chapter \ref{TODO}, on their own.
+
+TODO disk interface popsat\cite{NVME}
