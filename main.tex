@@ -529,20 +529,6 @@ implicit authentication - e.g session key exchange
 
 
 
-\section{SP Issuance}
-
-SP issuance is the process of creation of a new SP from a base template and a set of other templates. After an SP is issued, it can be personalized. Personalization of an SP is the process of 
-
-
-ISSUANCE
-
-issuance -- creation of SP from template, from admin SP, ,,,
-personalization --- after issuance, ussing the adminexch authority of the new sp, fill in tables, set access control... etc
-
-LIFE CYCLE
-
-... SP can be disabled (still can authenticate, deleteSP and set get on SPinfo (to enable)), frozen (any attempt to open session fails)
-
 
 s \\
 e \\
@@ -580,113 +566,69 @@ Locking Template ------ provides access control
 
 \subsection{Discovery}
 
-
-\subsubsection{nvme0n1}
-
-TPer feature:
- - comID mgmt supported 0
- - streaming supported 1
- - buffer mgmt supported 0
- - ack nack supported 0
- - async supported 0
- - sync supported 1
-Locking feature:
- - locking supported: 1
- - locking enabled 1
- - locked 1
- - media encryption: 1
- - MBR enabled 0
- - MBR done 0
-Geometry feature:
- - logical block size: 512
- - alignment granularity: 8
- - lowest alignment LBA: 0
-unimplemented feature 514
-Opal SSC V2.00 Feature:
- - base comID 4100
- - number of comIDs 1
- - number of locking SP admin authorities 4
- - number of locking SP user authorities 9
-unimplemented feature 1026
-Sending Parameters:
-Getting Parameters Result:
- - MaxComPacketSize: 0x80 0x3c
- - MaxResponseComPacketSize: 0x80 0x3c
- - MaxPacketSize: 0x80 0x28
- - MaxIndTokenSize: 0x80 0x04
- - MaxPackets: 0x01
- - MaxSubpackets: 0x01
- - MaxMethods: 0x01
- - MaxAuthentications: 0x05
- - MaxSessions: 0x01
- - MaxTransactionLimit: 0x01
- - DefSessionTimeout: 0x00
-
-
-
-base comID 4100
-alignment granularity: 8
-
-MaxComPacketSize: 0x80 0x3c
-MaxResponseComPacketSize: 0x80 0x3c
-MaxPacketSize: 0x80 0x28
-MaxIndTokenSize: 0x80 0x04
-MaxAuthentications: 0x05
-DefSessionTimeout: 0x00
-
-\subsubsection{sda}
-
-alignment granularity: 8
-base comID 32766
-
-MaxComPacketSize: 0x40 0x00
-MaxResponseComPacketSize: 0x40 0x00
-MaxPacketSize: 0x3f 0xec
-MaxAuthentications: 0x02
-DefSessionTimeout: 0x01 0xd4 0xc0
-
-\subsubsection{sdb}
-
-problems with alignment/block size...
-
-\subsubsection{sdc}
-
-alignment granularity: 1
-base comID 4100
-
-MaxComPacketSize: 0x01 0x02 0x00
-MaxResponseComPacketSize: 0x01 0x02 0x00
-MaxPacketSize: 0x01 0x01 0xec
-MaxIndTokenSize: 0x01 0x01 0xc8
-MaxAuthentications: 0x05
-DefSessionTimeout: 0x00
-
-\subsubsection{sdd}
-
-alignment granularity: 8
-base comID 4100
-
-MaxComPacketSize: 0x01 0x02 0x00
-MaxResponseComPacketSize: 0x01 0x02 0x00
-MaxPacketSize: 0x01 0x01 0xec
-MaxIndTokenSize: 0x01 0x00 0x04
-MaxAuthentications: 0x05
-DefSessionTimeout: 0x00
-
-
 \begin{filecontents*}{grade.csv}
-localname,name,givenname,matriculation,gender,grade
-nvme0,Samsung SSD 980 500GB,Q,12345,m,1.0
-sda,SanDisk SD7UB2Q512G1122,Anna,23456,f,2.3
-sdb,KINGSTON SKC600512G,Werner,34567,m,5.0
+realname,name,TPerFeatureComIDMgmtSupported,TPerFeatureStreamingSupported,TPerFeatureBufferMgmtSupported,TPerFeatureACKNAKSupported,TPerFeatureAsyncSupported,TPerFeatureSyncSupported,LockingFeatureHWResetforLORDORSupported,LockingFeatureMBRShadowingNotSupported,LockingFeatureMBRDone,LockingFeatureMBREnabled,LockingFeatureMediaEncryption,LockingFeatureLocked,LockingFeatureLockingEnabled,LockingFeatureLockingSupported,GeometryFeatureLogicalBlockSize,GeometryFeatureAlignmentGranularity,GeometryFeatureLowestAlignedLBA,SingleUserModeFeatureNumberofLockingObjectsSupported,SingleUserModeFeaturePolicy,SingleUserModeFeatureAll,SingleUserModeFeatureAny,DataStoreTableFeatureMaximumnumberofDataStoretables,DataStoreTableFeatureMaximumtotalsizeofDataStoretables,DataStoreTableFeatureDataStoretablesizealignment,OpalSSCVFeatureBaseComID,OpalSSCVFeatureNumberofComIDs,OpalSSCVFeatureNumberofLockingSPAdminAuthoritiesSupported,OpalSSCVFeatureNumberofLockingSPUserAuthoritiesSupported,OpalSSCVFeatureInitialCPINSIDPINIndicator,OpalSSCVFeatureBehaviorofCPINSIDPINuponTPerRevert,PropertiesMaxComPacketSize,PropertiesMaxResponseComPacketSize,PropertiesMaxPacketSize,PropertiesMaxIndTokenSize,PropertiesMaxPackets,PropertiesMaxSubpackets,PropertiesMaxMethods,PropertiesMaxSessions,PropertiesMaxAuthentications,PropertiesMaxTransactionLimit,PropertiesDefSessionTimeout,PropertiesMaxSessionTimeout,PropertiesMinSessionTimeout,PropertiesContinuedTokens,PropertiesSequenceNumbers,PropertiesAckNak,PropertiesAsynchronous
+SanDisk SD7UB2Q5,/dev/sda,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,8,0,9,1,0,0,9,10485760,1,32766,1,4,9,0,0,0x4000,0x4000,0x3fec,0x3fc8,0x01,0x01,0x01,0x01,0x02,0x01,0x01d4c0,,,0x00,0x00,0x00,0x00
+KINGSTON SKC6005,/dev/sdb,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,1,0,9,1,0,0,10,10485760,1,2184,1,4,9,0,0,0x00007e00,0x00007e00,0x00007dec,0x00007dc8,0x00000001,0x00000001,0x00000001,0x00000001,0x0000000e,0x00000001,0x000493e0,0x00000000,0x00001388,,,,
+Samsung SSD 850,/dev/sdc,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,1,0,9,1,0,0,9,10485760,1,4100,1,4,9,0,0,0x010200,0x010200,0x0101ec,0x0101c8,0x01,0x01,0x01,0x01,0x05,0x01,0x00,,,,,,
+Samsung SSD 860,/dev/sdd,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,8,0,,,,,9,10485760,1,4100,1,4,9,0,0,0x010200,0x010200,0x0101ec,0x010004,0x01,0x01,0x01,0x01,0x05,0x01,0x00,,,,,,
+Samsung SSD 980 500GB,/dev/nvme0n1,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,8,0,,,,,9,10485760,1,4100,1,4,9,0,0,0x803c,0x803c,0x8028,0x8004,0x01,0x01,0x01,0x01,0x05,0x01,0x00,,,,,,
 \end{filecontents*}
 
-    \begin{tabular}{l|l|l|c}%
-    \bfseries Disk name & \bfseries Base ComID & \bfseries MaxComPacketSize & \bfseries MaxResponseComPacketSize% specify table head
+\begin{table}
+\centering
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries realname & \bfseries ComIDMgmtSupported & \bfseries StreamingSupported & \bfseries BufferMgmtSupported & \bfseries ACKNAKSupported & \bfseries AsyncSupported & \bfseries SyncSupported & \bfseries HWResetforLORDORSupported & \bfseries MBRShadowingNotSupported & \bfseries MBRDone & \bfseries MBREnabled & \bfseries MediaEncryption & \bfseries Locked
+% specify table head
     \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
-    {\\\hline\localname : \name & \matriculation & \matriculation & \matriculation}% specify your coloumns here
+    {\\\hline \name & \realname & \TPerFeatureComIDMgmtSupported & \TPerFeatureStreamingSupported & \TPerFeatureBufferMgmtSupported & \TPerFeatureACKNAKSupported & \TPerFeatureAsyncSupported & \TPerFeatureSyncSupported & \LockingFeatureHWResetforLORDORSupported & \LockingFeatureMBRShadowingNotSupported & \LockingFeatureMBRDone & \LockingFeatureMBREnabled & \LockingFeatureMediaEncryption & \LockingFeatureLocked
+}% specify your coloumns here
     \end{tabular}
+}
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries LockingEnabled & \bfseries LockingSupported & \bfseries LogicalBlockSize & \bfseries AlignmentGranularity & \bfseries LowestAlignedLBA & \bfseries NumberofLockingObjectsSupported & \bfseries Policy & \bfseries All & \bfseries Any & \bfseries MaximumnumberofDataStoretables & \bfseries MaximumtotalsizeofDataStoretables & \bfseries DataStoretablesizealignment
+% specify table head
+    \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
+    {\\\hline \name & \LockingFeatureLockingEnabled & \LockingFeatureLockingSupported & \GeometryFeatureLogicalBlockSize & \GeometryFeatureAlignmentGranularity & \GeometryFeatureLowestAlignedLBA & \SingleUserModeFeatureNumberofLockingObjectsSupported & \SingleUserModeFeaturePolicy & \SingleUserModeFeatureAll & \SingleUserModeFeatureAny & \DataStoreTableFeatureMaximumnumberofDataStoretables & \DataStoreTableFeatureMaximumtotalsizeofDataStoretables & \DataStoreTableFeatureDataStoretablesizealignment
+}% specify your coloumns here
+    \end{tabular}
+}
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries BaseComID & \bfseries NumberofComIDs & \bfseries NumberofLockingSPAdminAuthoritiesSupported & \bfseries NumberofLockingSPUserAuthoritiesSupported & \bfseries InitialCPINSIDPINIndicator & \bfseries BehaviorofCPINSIDPINuponTPerRevert
+% specify table head
+    \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
+    {\\\hline \name & \OpalSSCVFeatureBaseComID & \OpalSSCVFeatureNumberofComIDs & \OpalSSCVFeatureNumberofLockingSPAdminAuthoritiesSupported & \OpalSSCVFeatureNumberofLockingSPUserAuthoritiesSupported & \OpalSSCVFeatureInitialCPINSIDPINIndicator & \OpalSSCVFeatureBehaviorofCPINSIDPINuponTPerRevert 
+}% specify your coloumns here
+    \end{tabular}
+}
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries MaxComPacketSize & \bfseries MaxResponseComPacketSize & \bfseries MaxPacketSize & \bfseries MaxIndTokenSize & \bfseries MaxPackets & \bfseries MaxSubpackets & \bfseries MaxMethods & \bfseries MaxSessions & \bfseries MaxAuthentications & \bfseries MaxTransactionLimit & \bfseries DefSessionTimeout & \bfseries MaxSessionTimeout & \bfseries MinSessionTimeout & \bfseries ContinuedTokens & \bfseries SequenceNumbers & \bfseries AckNak & \bfseries Asynchronous
+% specify table head
+    \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
+    {\\\hline \name & \PropertiesMaxComPacketSize & \PropertiesMaxResponseComPacketSize & \PropertiesMaxPacketSize & \PropertiesMaxIndTokenSize & \PropertiesMaxPackets & \PropertiesMaxSubpackets & \PropertiesMaxMethods & \PropertiesMaxSessions & \PropertiesMaxAuthentications & \PropertiesMaxTransactionLimit & \PropertiesDefSessionTimeout & \PropertiesMaxSessionTimeout & \PropertiesMinSessionTimeout & \PropertiesContinuedTokens & \PropertiesSequenceNumbers & \PropertiesAckNak & \PropertiesAsynchronous
+}% specify your coloumns here
+    \end{tabular}
+}
 
+\caption{\label{table:data}Discovery process results, TODO: actually figure out how to do this nicely and easily, lol}
+\end{table}
+
+
+In order to collect information about Opal capabilities of the disks, we have written an utility program. This program uses the direct communication described in section~\ref{TODO} to communicate with the disk. We have decided to use the direct communication instead of the primarily because the capability to perform the discovery process using the Linux Opal ioctl is currently not possible. Even though there are patches being suggested, even if they were to be accepted, only the newest version of Linux kernel would support this feature, limiting the sample size.
+However, because this approach requires separate implementations of the disk interface commands, something about how this limits us only to a few disk interfaces because of testing, but it's not such a problem because they have a majority share, so find some source that this is actually true.
+The utility program performs the level 0 and level 1 discovery and the identify command to gather information about the disk.
+The aggregated and formatted output can be seen in table~\ref{table:data}.
+
+The first part of the table contains values acquired through the level 0 discovery, the second part (starting with \verb|MaxComPacketSize|) contains values obtained through the level 2 discovery. In case the disk did not report a value, empty cell is used.
+There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
+Some variables are dependent: because \verb|MaxPackets| is always the minimum (1), then e.g \verb|MaxPacketSize| = \verb|MaxComPacketSize| - (fixed size of \verb|MaxComPacketSize| header).
+
+
+\newpage
 
 \printbibliography[heading=bibintoc] %% Print the bibliography.
 
