@@ -1,0 +1,51 @@
+
+\begin{filecontents*}{grade.csv}
+realname,name,TPerFeatureComIDMgmtSupported,TPerFeatureStreamingSupported,TPerFeatureBufferMgmtSupported,TPerFeatureACKNAKSupported,TPerFeatureAsyncSupported,TPerFeatureSyncSupported,LockingFeatureHWResetforLORDORSupported,LockingFeatureMBRShadowingNotSupported,LockingFeatureMBRDone,LockingFeatureMBREnabled,LockingFeatureMediaEncryption,LockingFeatureLocked,LockingFeatureLockingEnabled,LockingFeatureLockingSupported,GeometryFeatureLogicalBlockSize,GeometryFeatureAlignmentGranularity,GeometryFeatureLowestAlignedLBA,SingleUserModeFeatureNumberofLockingObjectsSupported,SingleUserModeFeaturePolicy,SingleUserModeFeatureAll,SingleUserModeFeatureAny,DataStoreTableFeatureMaximumnumberofDataStoretables,DataStoreTableFeatureMaximumtotalsizeofDataStoretables,DataStoreTableFeatureDataStoretablesizealignment,OpalSSCVFeatureBaseComID,OpalSSCVFeatureNumberofComIDs,OpalSSCVFeatureNumberofLockingSPAdminAuthoritiesSupported,OpalSSCVFeatureNumberofLockingSPUserAuthoritiesSupported,OpalSSCVFeatureInitialCPINSIDPINIndicator,OpalSSCVFeatureBehaviorofCPINSIDPINuponTPerRevert,PropertiesMaxComPacketSize,PropertiesMaxResponseComPacketSize,PropertiesMaxPacketSize,PropertiesMaxIndTokenSize,PropertiesMaxPackets,PropertiesMaxSubpackets,PropertiesMaxMethods,PropertiesMaxSessions,PropertiesMaxAuthentications,PropertiesMaxTransactionLimit,PropertiesDefSessionTimeout,PropertiesMaxSessionTimeout,PropertiesMinSessionTimeout,PropertiesContinuedTokens,PropertiesSequenceNumbers,PropertiesAckNak,PropertiesAsynchronous
+SanDisk SD7UB2Q5,/dev/sda,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,8,0,9,1,0,0,9,10485760,1,32766,1,4,9,0,0,0x4000,0x4000,0x3fec,0x3fc8,0x01,0x01,0x01,0x01,0x02,0x01,0x01d4c0,,,0x00,0x00,0x00,0x00
+KINGSTON SKC6005,/dev/sdb,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,1,0,9,1,0,0,10,10485760,1,2184,1,4,9,0,0,0x00007e00,0x00007e00,0x00007dec,0x00007dc8,0x00000001,0x00000001,0x00000001,0x00000001,0x0000000e,0x00000001,0x000493e0,0x00000000,0x00001388,,,,
+Samsung SSD 850,/dev/sdc,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,1,0,9,1,0,0,9,10485760,1,4100,1,4,9,0,0,0x010200,0x010200,0x0101ec,0x0101c8,0x01,0x01,0x01,0x01,0x05,0x01,0x00,,,,,,
+Samsung SSD 860,/dev/sdd,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,8,0,,,,,9,10485760,1,4100,1,4,9,0,0,0x010200,0x010200,0x0101ec,0x010004,0x01,0x01,0x01,0x01,0x05,0x01,0x00,,,,,,
+Samsung SSD 980 500GB,/dev/nvme0n1,0,1,0,0,0,1,0,0,0,0,1,0,1,1,512,8,0,,,,,9,10485760,1,4100,1,4,9,0,0,0x803c,0x803c,0x8028,0x8004,0x01,0x01,0x01,0x01,0x05,0x01,0x00,,,,,,
+\end{filecontents*}
+
+\begin{table}
+\centering
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries realname & \bfseries ComIDMgmtSupported & \bfseries StreamingSupported & \bfseries BufferMgmtSupported & \bfseries ACKNAKSupported & \bfseries AsyncSupported & \bfseries SyncSupported & \bfseries HWResetforLORDORSupported & \bfseries MBRShadowingNotSupported & \bfseries MBRDone & \bfseries MBREnabled & \bfseries MediaEncryption & \bfseries Locked
+% specify table head
+    \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
+    {\\\hline \name & \realname & \TPerFeatureComIDMgmtSupported & \TPerFeatureStreamingSupported & \TPerFeatureBufferMgmtSupported & \TPerFeatureACKNAKSupported & \TPerFeatureAsyncSupported & \TPerFeatureSyncSupported & \LockingFeatureHWResetforLORDORSupported & \LockingFeatureMBRShadowingNotSupported & \LockingFeatureMBRDone & \LockingFeatureMBREnabled & \LockingFeatureMediaEncryption & \LockingFeatureLocked
+}% specify your coloumns here
+    \end{tabular}
+}
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries LockingEnabled & \bfseries LockingSupported & \bfseries LogicalBlockSize & \bfseries AlignmentGranularity & \bfseries LowestAlignedLBA & \bfseries NumberofLockingObjectsSupported & \bfseries Policy & \bfseries All & \bfseries Any & \bfseries MaximumnumberofDataStoretables & \bfseries MaximumtotalsizeofDataStoretables & \bfseries DataStoretablesizealignment
+% specify table head
+    \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
+    {\\\hline \name & \LockingFeatureLockingEnabled & \LockingFeatureLockingSupported & \GeometryFeatureLogicalBlockSize & \GeometryFeatureAlignmentGranularity & \GeometryFeatureLowestAlignedLBA & \SingleUserModeFeatureNumberofLockingObjectsSupported & \SingleUserModeFeaturePolicy & \SingleUserModeFeatureAll & \SingleUserModeFeatureAny & \DataStoreTableFeatureMaximumnumberofDataStoretables & \DataStoreTableFeatureMaximumtotalsizeofDataStoretables & \DataStoreTableFeatureDataStoretablesizealignment
+}% specify your coloumns here
+    \end{tabular}
+}
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries BaseComID & \bfseries NumberofComIDs & \bfseries NumberofLockingSPAdminAuthoritiesSupported & \bfseries NumberofLockingSPUserAuthoritiesSupported & \bfseries InitialCPINSIDPINIndicator & \bfseries BehaviorofCPINSIDPINuponTPerRevert
+% specify table head
+    \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
+    {\\\hline \name & \OpalSSCVFeatureBaseComID & \OpalSSCVFeatureNumberofComIDs & \OpalSSCVFeatureNumberofLockingSPAdminAuthoritiesSupported & \OpalSSCVFeatureNumberofLockingSPUserAuthoritiesSupported & \OpalSSCVFeatureInitialCPINSIDPINIndicator & \OpalSSCVFeatureBehaviorofCPINSIDPINuponTPerRevert 
+}% specify your coloumns here
+    \end{tabular}
+}
+\resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l}%
+    \bfseries name & \bfseries MaxComPacketSize & \bfseries MaxResponseComPacketSize & \bfseries MaxPacketSize & \bfseries MaxIndTokenSize & \bfseries MaxPackets & \bfseries MaxSubpackets & \bfseries MaxMethods & \bfseries MaxSessions & \bfseries MaxAuthentications & \bfseries MaxTransactionLimit & \bfseries DefSessionTimeout & \bfseries MaxSessionTimeout & \bfseries MinSessionTimeout & \bfseries ContinuedTokens & \bfseries SequenceNumbers & \bfseries AckNak & \bfseries Asynchronous
+% specify table head
+    \csvreader[head to column names]{grade.csv}{}% use head of csv as column names
+    {\\\hline \name & \PropertiesMaxComPacketSize & \PropertiesMaxResponseComPacketSize & \PropertiesMaxPacketSize & \PropertiesMaxIndTokenSize & \PropertiesMaxPackets & \PropertiesMaxSubpackets & \PropertiesMaxMethods & \PropertiesMaxSessions & \PropertiesMaxAuthentications & \PropertiesMaxTransactionLimit & \PropertiesDefSessionTimeout & \PropertiesMaxSessionTimeout & \PropertiesMinSessionTimeout & \PropertiesContinuedTokens & \PropertiesSequenceNumbers & \PropertiesAckNak & \PropertiesAsynchronous
+}% specify your coloumns here
+    \end{tabular}
+}
+
+\caption{\label{table:data}Discovery process results, TODO: actually figure out how to do this nicely and easily, lol}
+\end{table}

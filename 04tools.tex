@@ -1,0 +1,122 @@
+
+\chapter{Existing tools}
+
+In order to give users the ability to manage their SED disks without the need to create their own programs to access existing interfaces, there exist several tools. 
+
+In this chapter we will look at several existing tools that allow one to manage encryption of disks.
+
+\section{Cryptsetup}
+
+\emph{Cryptsetup}\footnote{\url{https://gitlab.com/cryptsetup/cryptsetup}} is a tool for disk encryption setup. Although this tool supports several formats and volumes, such as ..., all of them are software, and there is no support hardware encryption support as of now.
+
+\section{sedutil}
+
+\emph{sedutil}\footnote{\url{https://github.com/Drive-Trust-Alliance/sedutil}} is a tool for management of SED disks, maintained by the Drive Trust Alliance.
+It currently supports the Enterprise and Opal SSCs (and additionally the remaining Pyrite, Opalite and Ruby SSCs in a fork of the project\footnote{\url{https://github.com/ChubbyAnt/sedutil}}).
+Even though it is currently the largest open-source project to control SED disks, the code repository does not seem to be currently active.
+
+This tool does not use the Linux Opal ioctl interface and instead uses the approach described in the subsection \ref{direct_communication_raw_ioctl}. This allows the tool not only to be multi-platform but also to use the Opal features in their entirety instead of only the subset introduced in the Opal ioctl interface.
+... although there currently certain limits for e.g. having only one admin ...
+
+% Provides functionality to:
+The tool offers the following commands, grouped by their functionality:
+\begin{itemize}
+    \item Discovery: \begin{itemize}
+\item \verb|isValidSED| --- lists SSCs supported by the selected disk.
+\item \verb|scan| --- performs \verb|isValidSED| command on every disk in the system.
+\item \verb|query| --- performs Level 0 and Level 1 Discovery on the selected disk.
+\item \verb|printDefaultPassword| --- prints the MSID password.
+    \end{itemize}
+    
+    \item TPer management: \begin{itemize}
+\item \verb|initialSetup| --- takes ownership of the disk, and initializes Locking SP, global LR and shadow MBR.
+\item \verb|setSIDPassword| --- changes the password of SID authority.
+\item \verb|setAdmin1Pwd| --- changes the password of Locking SP's first admin authority. 
+\item \verb|setPassword| --- changes the password of any supported Locking SP's authority.
+    \end{itemize}
+    
+    \item Locking range management: \begin{itemize}
+\item \verb|listLockingRanges| --- prints information about all LRs,
+\item \verb|listLockingRange| --- prints information about a single LR,
+\item \verb|rekeyLockingRange| --- regenerates the LR's key (destroying the data in the LR in the process)
+\item \verb|setupLockingRange| --- sets the start and length of locking range,
+\item \verb|setLockingRange| --- sets ReadLocked and WriteLock of the LR depending on the chosen configuration (read-write, read-only, or locked).
+\item \verb|enableLockingRange| --- sets ReadLockEnabled and WriteLockEnabled of the LR. 
+\item \verb|disableLockingRange| --- unsets ReadLockEnabled and WriteLockEnabled of the LR. 
+    \end{itemize}
+    
+    \item Shadow MBR management: \begin{itemize}
+\item \verb|setMBREnable| --- sets Enable column of the MBRControl table.
+\item \verb|setMBRDone| --- sets Done column of the MBRControl table.
+\item \verb|loadPBAimage| --- writes the contents of a file into the MBR table to be used as the shadow MBR.
+    \end{itemize}
+    
+    \item Reverting the device: \begin{itemize}
+\item \verb|revertTPer| --- reverts the TPer using the MSID password.
+\item \verb|yesIreallywanttoERASEALLmydatausingthePSID| --- reverts the TPer using the PSID password.
+\item \verb|revertNoErase| --- reverts only the Locking SP, keeping the global range data.
+    \end{itemize}
+    
+    \item Enterprise-specific functionality: \begin{itemize}
+\item \verb|setBandsEnabled| ---
+\item \verb|setBandEnabled| --- 
+\item \verb|eraseLockingRange| ---
+    \end{itemize}
+\end{itemize}
+% For Discovery there are commands 
+% \verb|isValidSED| which lists supported SSCs by the selected disk,
+% \verb|scan| which performs \verb|isValidSED| command on every disk in the system,
+% and \verb|query| which performs Level 0 and Level 1 Discovery on the selected disk.
+% Command \verb|printDefaultPassword| prints the MSID password.
+% For management of the disk there are commands \verb|initialSetup| enabling to take ownership of the disk, 
+% \verb|setSIDPassword| changing the password of SID authority,
+% \verb|setAdmin1Pwd| changing password of Locking SP's first admin authority, 
+% and \verb|setPassword| changing the password of any Locking SP's authority.
+
+% For management of LRs there commands
+% \verb|listLockingRanges| prints information about all LRs,
+% \verb|listLockingRange| prints information about a single LR,
+% \verb|rekeyLockingRange| regenerates the LR's key (destroying the data in the LR in the process)
+% \verb|setupLockingRange| sets the start and length of locking range,
+% \verb|setLockingRange| sets read locked and write locked of the LR, and
+% \verb|disableLockingRange| and \verb|enableLockingRange| reading/writing locking enabled, 
+
+
+% For controlling the shadow MBR there are commands \verb|setMBREnable| and \verb|setMBRDone| to set the Enable and Done columns respectively, and \verb|loadPBAimage| to write a file into the MBR table to be used as the shadow MBR.
+
+% There are several commands for reverting the state of the device. Command
+% \verb|revertTPer| reverts the TPer using the MSID password, 
+% \verb|yesIreallywanttoERASEALLmydatausingthePSID| reverts the TPer using the PSID password, 
+% and \verb|revertNoErase| reverts only the Locking SP, keeping the global range data.
+
+% TCG Enterprise specific functionality, replaces LRs???? not really???, the use bands and bandmasters and erasemasters.
+% \verb|setBandsEnabled|
+% \verb|setBandEnabled|
+% \verb|eraseLockingRange| 
+
+
+
+\section{hdparm}
+ 
+The \emph{hdparm}\footnote{\url{https://sourceforge.net/projects/hdparm}} tool provides a command line interface to control parameters of ATA disks. Among others this tools gives access to control ATA Security Feature Set.
+The examples of SED relevant commands for functionality described in \ref{TODO} are:
+\begin{itemize}
+\item Enable the ATA Security Feature Set:\\ \verb|hdparm --security-set-pass pwd /dev/sda|
+\item Disable ATA Security Feature Set:\\ \verb|hdparm --security-disable pwd /dev/sda|
+\item Unlock the disk:\\ \verb|hdparm --security-unlock pwd /dev/sda|
+\item Erase the disk:\\ \verb|hdparm --security-erase pwd /dev/sda|
+\end{itemize}
+Implicitly the user password is referred to in the commands, but \verb|--user-master| can be specified to select master or user password explicitly. While enabling the ATA Security Feature Set, it is also possible to use the \verb|--security-mode| option to choose between high and maximum security mode.
+A command to lock the drive is missing because a drive with enabled ATA Security Feature Set is locked when powered off.
+
+% ATA Security Feature Set: seems to be juts for ata and ata password, can it also work with our disks?
+
+\section{Proprietary solutions}
+
+Some disks might provide their own software for their own proprietary hardware encryption. These are usually found separately on website or something, but some are provided as by the disk on an unecrypted partition.
+
+
+\section{go-tcg-storage}
+
+The \emph{go-tcg-storage}\footnote{\url{https://github.com/open-source-firmware/go-tcg-storage}} is a Go library that does everything, and is actually supported. It has a few tools that let you do some things. It also supports more SSCs than others. Just found out about it, will need to look into it deeper and figure out why is it worse, so we won't look as bad.
+

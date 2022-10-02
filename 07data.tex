@@ -1,0 +1,58 @@
+
+\chapter{Data (and our utility)}
+
+In our analysis we have tested several internal SSD devices, by multiple manufacturers and with different interfaces.
+
+\subsection{Program structure}
+
+Is there something to really talk about? 
+
+\subsection{Disk capabilities discovery}
+
+
+In order to collect information about Opal capabilities of the disks, we have written an utility program. This program uses the direct communication described in section~\ref{TODO} to communicate with the disk. We have decided to use the direct communication instead of the primarily because the capability to perform the discovery process using the Linux Opal ioctl is currently not possible. Even though there are patches being suggested, even if they were to be accepted, only the newest version of Linux kernel would support this feature, limiting the sample size.
+However, because this approach requires separate implementations of the disk interface commands, something about how this limits us only to a few disk interfaces because of testing, but it's not such a problem because they have a majority share, so find some source that this is actually true.
+The utility program performs the level 0 and level 1 discovery and the identify command to gather information about the disk.
+The aggregated and formatted output can be seen in table~\ref{table:data}.
+
+Compared to the two previous levels, the level 2 discovery is more complicated. The level 2 discovery is based on reading tables. Since the standard leaves space for vendor unique tables, we need to first discover these tables. This is done by first reading the SP table of the Admin SP, getting a list of all the SPs in the TPer. Afterwards, we read the Table table of each of the found SPs, getting a list of all tables in each of the SPs. Since each table used in this table discovery process is mandatory, we should be able to get a list of all the tables in the TPer this way. Finally, we can iterate through all the tables, read each entry, and save the contents.
+
+Output of the level 2 discovery depends on several factors: the state of the TPer, the authority used during the discovery...
+The state of the TPer defines which tables and SPs are available..., It is not desirable to change this state by activating the Locking SP, since that could have unwanted consequences for the future use of Opal on this device by the owner.
+The admin authority on the other hand could be optionally provided by the user. However, none of the authorities can access all the tables\footnote{Counterintuitively, access protected by \texttt{ACE\_ANYBODY}, can be only be accessed by the Anybody authority and not any of the higher authority authorities, such as Admin authorities.}, and the information accessible by higher authorities is only potentially sensitive information. So this is a non-issue.
+
+The first part of the table contains values acquired through the level 0 discovery, the second part (starting with \verb|MaxComPacketSize|) contains values obtained through the level 2 discovery. In case the disk did not report a value, empty cell is used.
+There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
+Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.
+
+Although not a part of the discovery process, the utility can also access other functions that tell us more about the device, such as the Random method to generate random data.
+
+
+
+\section{Disk management}
+
+Other than the Discovery process described earlier, the utility can also be used for managing a SED device. For this application it offers several commands.
+The commands allow basic interaction with a SED disk, such as taking ownership of the disk, reverting the disk, creating locking ranges, or locking the disk. However, it is possible to easily extend the tool to support also more advanced use cases, something about how it's thanks to its good quality ;).
+
+TODO: something we can do better than sedutil????
+
+\section{TODOs}
+
+
+TODO: describe how different disks accept "bad" input: some disks don't mind empty list in parameter, other disks hate it (even close the session, some just return empty list  as response but success); or alignment of packets: 
+
+TODO:  using Opal before taking ownership --- what happens if I just use default password for everything --- works just fine :)
+
+TODO: try to lock only reading, how to write/can I write? -- can do just fine :)
+
+TODO: why do some disks have maxinstances of base template one???
+TODO: missing DataRemovalMechanism table
+
+
+
+TODO: activate sets from manufactured-inactive to manufactured, admin sp starts in manufactured, how to use datastore extension of actiavte then?
+SPObjectUID.Activate[
+DataStoreTableSizes = list [ uintegers ]
+]
+=>
+[ ]

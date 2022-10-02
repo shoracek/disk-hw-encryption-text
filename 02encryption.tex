@@ -1,0 +1,168 @@
+
+\chapter{Hardware disk encryption}
+
+\emph{Hardware disk encryption} is a technology that provides confidentiality of data stored on a storage device using encryption provided by hardware.
+
+Some general overview about what it is, I guess., maybe talk about both sw and hw enc instead
+
+Describe generic stuff: provisioning, locking, key types DEK, KEK, MEK, processes, locking ranges vs. FDE, ... keyslots?,,, (and for opal TPer, SP, ..)
+
+mention LUKS somewhere...
+
+The data encryption process can be conducted in logically and physically different places, depending on the type of the disk encryption. In the following sections of this chapter, we will further describe three such types.
+
+\section{Self-encrypting drives}
+
+\emph{Self-encrypting drive} (SED) is such a drive that 
+
+% at least try to mention ATA security (but it is just access control mechanism, no encryption... soooo),,, which means also mentioning opal,,,, and TCG Enterprise...
+
+
+\subsection{ATA Security Feature Set}
+
+ATA Security Feature Set~\cite{acs-3} allows one to protect the data and configuration of the disk.
+It offers commands to set a password, to unlock the disk, to erase the data on the disk, to freeze the device, and to disable the password.
+
+In order to authenticate to the disk there are two passwords. 
+The Master password, initially set by the manufacturer, and the User password.
+The usage of Master password to unlock or disable the security can be disabled by setting the Master Password Capability bit while setting the User password. Even if the Master password is disabled for unlocking the disk or disabling the locking, it can still be used for erasing the disk.
+
+The disk protection is enabled by setting the User password. After the device is turned on again, the device is locked and to access the data on the disk or use some of the ATA commands, it needs to be unlocked by providing a password using the unlock command. By disabling the User password, the protection of the device can be disabled.
+
+However, the ATA Security Feature Set does not provide encryption, only access control.
+Still, some of the SED solutions use ATA Security commands as their interface to provide encryption and unlocking of the disk.
+
+% That means that it is kind of similar to the TCG Pyrite SSC.
+% sometimes used as alternative interface????
+% ATA Security Feature Set is reported only when the Locking SP is not activated.
+
+\subsection{Proprietary standards}
+
+
+
+alternatives like "Western Digital My Passport"...
+
+Intel’s SSD 320 and 520 series
+
+\section{Inline encryption hardware}
+
+Compared to the previously described self-encrypting drives, inline encryption hardware is separated and independent from the disk. 
+
+basically just allows the user to insert keys in and works as a "filter" of the input/output of disk.
+
+something about how it provides actually a way to check the encrypted content, right?
+
+seems to be primarily in android , source?
+
+find how much inline enc hardware there really is 
+
+\section{Software encryption}
+
+As an alternative to the hardware encryption, there exists a software encryption. Compared to the hardware encryption this encryption does not require specialized software, even though ... performance can be improved by using some e.g. instructions...
+
+probably just a quick overview, ... maybe change the chapter to just "disk encryption"... or mention this just shortly at the start...
+
+\subsection{Linux stack}
+
+rethink where to put this... maybe tools?
+
+There are several different encryption libraries/subsystems... In this section we will mention only two of them, each representing different approach to software encryption.
+
+\paragraph{dm-crypt}
+
+Works on block device level --- can encrypt everything, including metadata, partition tables,...
+but it is not very precise, must encrypt everything on the filesystem, need access to the block device.
+
+I don't think that inline encryption is supported AFAIK...
+
+\paragraph{fscrypt}
+
+Works on filesystem level --- can include only some files...
+fscrypt supports also inline encryption, allowing it to get
+
+In the following paragraphs, that should be redone, I am assuming ext4.
+
+\paragraph{How to make it work?}
+
+As of now, blk-layer inline encryption is supported only by two filesystems in Linux: ext4 and F2FS.
+Need to use a kernel with \verb|CONFIG_FS_ENCRYPTION_INLINE_CRYPT| enabled.
+Need to first mount the filesystem with the inline encryption flag:
+\begin{lstlisting}[language=bash]
+mount -t ext4 /dev/foo /mnt/foo -o inlinecrypt
+\end{lstlisting}
+It is not enough to specify the inline encryption flag, the encryption itself also must be enabled. Assuming ext4 filesystem, the encryption can be enabled after mounting like so:
+\begin{lstlisting}[language=bash]
+tune2fs -O encrypt "/dev/loop0"
+\end{lstlisting}
+After this, \verb|fscrypt| can be used as normal and it will use inline encryption for this filesystem. 
+
+In order to encrypt a folder using a \verb|fscrypt|, the following must be done: an encryption key must be added and the encryption policy must be created.
+
+\begin{lstlisting}[language=c]
+int fd = open(pathname, O_RDONLY | O_CLOEXEC);
+
+struct fscrypt_add_key_arg *key_request = calloc(1, sizeof(struct fscrypt_add_key_arg) + key_len);
+struct fscrypt_policy_v2 policy_request = { 0 };
+
+// add a key
+key_request->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
+key_request->key_id = 0;
+key_request->raw_size = key_len;
+memcpy(key_request->raw, key, key_len);
+ioctl(fd, FS_IOC_ADD_ENCRYPTION_KEY, key_request);
+
+// set a policy
+policy_request.version = 2;
+policy_request.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
+policy_request.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
+policy_request.flags = FSCRYPT_POLICY_FLAGS_PAD_8 | FSCRYPT_POLICY_FLAGS_PAD_16 | FSCRYPT_POLICY_FLAGS_PAD_32;
+memcpy(policy_request.master_key_identifier, key_request->key_spec.u.identifier, FSCRYPT_KEY_IDENTIFIER_SIZE);
+ioctl(fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy_request);
+\end{lstlisting}
+
+This code sets up an encryption policy for the file specified by the pathname. 
+
+\paragraph{How does it work?}
+
+\paragraph{Setup}
+
+During mounting the ``inlinecrypt''/\verb|SB_INLINECRYPT|  flag is written into the \verb|super_block| structure.
+
+It all starts in \verb|__ext4_new_inode|. This is the internal function used when creating new inodes, called by functions such as \verb|ext4_create| when creating a new file.
+
+The function (if it is not inode used for large extended attributes?) calls \verb|fscrypt_prepare_new_inode|.
+
+\verb|fscrypt_prepare_new_inode -> fscrypt_setup_encryption_info ->| \verb|setup_file_encryption_key ->  fscrypt_select_encryption_impl|
+
+In \verb|fscrypt_select_encryption_impl| there is actually the only place where the \verb|SB_INLINECRYPT| flag is used.
+... Calls \verb|blk_crypto_config_supported| to check the device's crypto profile.
+Afterwards, \verb|fscrypt_select_encryption_impl| function sets the \verb|(fscrypt_info *)ci->ci_inlinecrypt|.
+
+\verb|setup_per_mode_enc_key| then sets the \verb|(fscrypt_info *)ci->ci_enc_key|.
+
+\paragraph{Usage}
+
+The bio function is stored in \\ \verb|(struct bio *)bio->(struct bio_crypt_ctx *)bi_crypt_context|
+
+Function \verb|fscrypt_set_bio_crypt_ctx| changes the file's bio to use inline encryption... simply calls the blk layer \verb|bio_crypt_set_ctx|.
+
+Calling \verb|submit_bio| like normally ... \verb|__submit_bio| calls \verb|__blk_crypto_bio_prep|...
+
+\blockquote{If the bio crypt context provided for the bio is supported by the underlying device's inline encryption hardware, do nothing.}
+
+\verb|__blk_crypto_rq_bio_prep| however sets the context of the request to the one of the bio... 
+After the bio prep  \verb|blk_mq_submit_bio| gets called (which calls \verb|blk_mq_bio_to_request|, and after that also \verb|blk_crypto_init_request->blk_crypto_get_keyslot| which updates the devices keyslot to contain the new key..., but does nothing if the device does not have keyslots)..... the info about the key to use then has to be acquired by the driver from \verb|request->|
+
+
+Most important are probably structures \verb|blk_crypto_ll_ops| and \verb|blk_crypto_profile|... just two operations, program key and evict key. 
+
+
+
+how to get crypto profile from outside..
+
+
+
+
+Where does the hardware come to play?
+
+\verb|ufshcd_exec_raw_upiu_cmd()->ufshcd_issue_devman_upiu_cmd()->ufshcd_prepare_req_desc_hdr()->ufshcd_prepare_req_desc_hdr_crypto()| sets the header with the correct keyslot.
