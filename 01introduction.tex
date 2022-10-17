@@ -7,14 +7,19 @@
 
 % Something about how disk encryption is a necessity for every use case of disk. 
 Whether it is a disk of a corporate laptop, personal desktop, or server storage, all of these devices may very likely contain sensitive information such as company internal data, medical records, or even session cookies.
+According to Verizon 2022 Data Breach Investigation Report~\cite{verizon_dbir}, lost or stolen assets made up almost 5\% of the analysed security incidents (not necessarily data breaches due to the way it's hard to find out if there was one with lost or stolen assets). Furthermore, this percentage does not account for other possible attacks, where the disk could be compromised without stealing the device, such as unauthorized access to the deployed server.
 
-According to Verizon 2022 Data Breach Investigation Report~\cite{verizon_dbir}, lost or stolen assets made up almost 5\% of the analysed security incidents (not necessarily data breaches due to the way it's hard to find out if there was one with lost or stolen assets). Furthermore, this percentage does not account for other possible attacks, where the disk could be compromised without stealing the device, something like infiltrating the server room and just reading the data.
+% something like infiltrating the server room and just reading the data.
 
-As such, it can be seen that some form of protection of confidentiality of data on the disk is necessary. Disk encryption may seem like an obvious solution. However, the traditional software disk encryption ... (However, something about how the performance of software solutions might not be the best, or that someone can see hardware having better security... decide whether not to just mention that software disk encryption has disadvantages, and then talk about it later as advantage of hardware encryption in the chapter later on)
-% Something about the advantages such as the secure erase.
-But something how about compared to software solutions, the hardware ones are closed source, without any info available, and so easily vulnerable to bad implementations. Something about how it might introduce new attacks.
+As such, it can be seen that some form of protection for the confidentiality of data on the disk is necessary. Disk encryption may seem like an obvious solution. However, traditional software disk encryption has several flaws. Such as increased energy demand or requirement of keys being present in the memory at all times, presenting a vulnerability.
+Even though the transfer of responsibility for encryption solves these issues, it introduces other new ones.
+
+% ... (However, something about how the performance of software solutions might not be the best, or that someone can see hardware having better security... decide whether not to just mention that software disk encryption has disadvantages, and then talk about it later as an advantage of hardware encryption in the chapter later on)
+% Something about the advantages, such as the secure erase.
+
+% But something how about compared to software solutions, the hardware ones are closed source, without any info available, and so easily vulnerable to bad implementations. Something about how it might introduce new attacks.
 
 % Something about the structure of what follows. 
-In this thesis, we will introduce the idea of hardware disk encryption, basic terms used in this area and something, and categorization of different approaches to hardware disk encryption. Afterwards, we will focus on the Opal standard as a representative of the self-encrypting disks approach to hardware disk encryption. Next, we will look at possible attacks on devices using hardware disk encryption. Finally, we will introduce our own tool to manage Opal disks and get their properties, and analyse data acquired using this tool.
+In this thesis, we will introduce the idea of hardware disk encryption, the basic terms used in this area, and the categorisation of different approaches to hardware disk encryption. Afterwards, we will focus on the Opal standard as a representative of the self-encrypting disks approach to hardware disk encryption. Next, we will look at possible attacks on devices using hardware disk encryption. Finally, we will introduce our own tool to manage Opal disks and get their properties, and analyse data acquired using this tool.
 
 \label{TODO}

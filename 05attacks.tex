@@ -1,10 +1,9 @@
 \chapter{Security of hardware encryption}
 
 Self-encrypting disks usually do not ...
-For example, the Opal standard aims to only \enquote{Protect the confidentiality of stored user data against unauthorized access once it leaves the owner’s control (following a power cycle and subsequent deauthentication)}~\cite{tcg-opal2}.
-Even if the device is successfully protected against such thread model, it still leaves many possible attack vectors.
-
-To extend the threat model into more realistic scenario, we consider an attacker that has physical access to the disk installed in a ``locked'' computer... or something
+For example, the Opal standard aims to only \enquote{Protect the confidentiality of stored user data against unauthorized access once it leaves the owner's control (following a power cycle and subsequent deauthentication)}~\cite{tcg-opal2}.
+Even if the device is successfully protected against such a threat model, it still leaves many possible attack vectors.
+To extend the threat model into a more realistic scenario, we consider an attacker that has physical access to the disk installed in a ``locked'' computer or something.
 
 It should be noted that some systems 
 
@@ -17,7 +16,9 @@ The threat model we consider in this analysis is primarily going to be the same 
 
 \section{Attacks on hardware encryption}
 
-In this chapter, we will provide an overview of state-of-the-art attacks relevant to hardware disk encryption. For each attack, we will provide our theoretical analysis of the protection offered by Opal, if properly implemented in a disk, against such an attack. For some of the attacks, we will also provide our practical insight.
+In this chapter, we will provide an overview of state-of-the-art attacks relevant to hardware disk encryption. For each attack, we will provide our theoretical analysis of the protection offered by Opal, if properly implemented in a disk, against such an attack. For a selection of the attacks, we will also provide our practical insight.
+
+TODO: clean up with citations from the vulnerabilities papers\cite{bypassing_in_enterprise, got_hw_crypto, sed-vulnerabilities, self_decrypting_risks, self_encrypting_deception, systematic_assessment_of_the_security}.
 
 % something about the fact that we are providing a overview of state-of-the-art attack on hardware encryption.
 
@@ -25,27 +26,35 @@ In this chapter, we will provide an overview of state-of-the-art attacks relevan
 
 An evil maid attack consists of a situation where the device is left unattended, and the attacker has full physical access. Such attacks usually have two phases. In the first phase, the disk is modified, e.g. by installing custom firmware or inserting a probe to eavesdrop on the communication. Then, the victim uses the disk, providing the password to unlock it. In the second phase, the attacker returns to collect the obtained information and undo their changes. In some cases, the attacker might not require physical access to the device and instead use a network to receive information and have, e.g. firmware reverse itself (or leave it be if the discovery of the attack is not a problem).
 
-\subsection{Attack on bad RNG}
+Hmmm, maybe something like: Opal does not specify anything about firmware update, and shadow MBR update requires authentication. Still, one could still listen to the cables, I suppose because Opal does not mandate secure messaging and so the communication can be simply sniffed out on the ATA/NVMe/whatever cables?
 
-Attack on bad RNG is such an attack which abuses RNG generating data with low entropy or even entirely predictable. 
+\subsection{Attack on RNG}
+\label{attack_rng}
 
-Since Opal specification 
+Attack on RNG is such an attack which abuses RNG generating data with low entropy or even entirely predictable. 
+
+Since Opal specification does not actually specify any implementation for the RNG, we cannot perform any fruitful analysis of the standard itself. However, we can still perform practical analysis.
 
 The Opal specification offers a few ways how to generate random data. The most useful would be GenKey used for generating DEKs, but since the destination cells are protected from reading, we cannot get to them easily. Another method of generating random data is the method Random. This method allows us to get at least 32 bytes~\cite{tcg-opal2} every invocation. Using this method, we have decided to generate random bytes to inspect later.
 From the disks we have inspected we have found the following:
 \begin{itemize}
     \item SanDisk X300s --- first Random invocation of session always return the same bytes. The value of the first bytes seems to change only after the new activation of Locking SP. Following invocations of the Random method in a session return different bytes.
-    \item Kingston KC600 --- for the minimum 32 bytes, the TPer closes the session on Random invocation. The same response was for most of the other tested values. However, if exactly $256^n-1$ bytes are requested, $128+n$ bytes are returned... lol, I see where the problem is now. The TPer doesn't parse it as a token but as a C unsigned integer. So, it was reading the header instead, and the \verb|0xff| bytes were required for ``NOPs'' since they are empty atoms. Using the parsing now, we can get up to 255 bytes from this disk at once.
+    % \item Kingston KC600 --- for the minimum 32 bytes, the TPer closes the session on Random invocation. The same response was for most of the other tested values. However, if exactly $256^n-1$ bytes are requested, $128+n$ bytes are returned... lol, I see where the problem is now. The TPer doesn't parse it as a token but as a regular ``C'' unsigned integer. So, it was reading the header instead, and the \verb|0xff| bytes were required for ``NOPs'' since they are tokens for empty atoms. With a slight modification, we can get up to 255 bytes from this disk at once.
+    \item Kingston KC600 --- for the minimum 32 bytes, the TPer closes the session on Random invocation. The same response was for most of the other tested values. However, if exactly $256^n-1$ bytes are requested, $128+n$ bytes are returned... lol, I see where the problem is now. The TPer doesn't parse it as a token but as a regular ``C'' unsigned integer. So, it was reading the header instead, and the \verb|0xff| bytes were required for ``NOPs'' since they are tokens for empty atoms. With a slight modification, we can get up to 255 bytes from this disk at once.
     \item Samsung disks --- return seemingly random values.
 \end{itemize}
 The results of dieharder's Diehard test suite found no statistical something problem. Note that for the Kingston KC600, we did not include the first batch of random bytes.
 
-SanDisk X300s --- However, using GenKey on a locking range does change the data into random bytes, so it does not seem that this affects key generation.
+SanDisk X300s --- However, using GenKey on a locking range does change the data into random bytes, so it does not seem this affects key generation.
 
-\subsection{Attack on bad interface/implementation/backdoor stuff}
+\subsection{Attack on interface}
 
 An attack on the interface is such an attack where problems in the interface are taken advantage of.
 This might include attacks such as using vendor commands to read the disk directly, even if the disk is unlocked... In the past, many hardware encrypted disks were vulnerable to such attacks, requiring only the usage of undocumented vendor commands to read either the data of the encryption module (in some cases containing the unencrypted DEK) or even the content of the disk itself.
+
+As can be seen from the previous subsection \ref{attack_rng}, the implementation of the interface is not perfect for some of the disks. Something like non-security issues might very likely be a sign of possible security issues, so don't take those problem that we found lightly! Maybe also something that more information can be found in the data chapter or something like that.
+
+TODO: rethink the subsection name.
 
 \subsection{Cold boot attack}
 
@@ -57,7 +66,7 @@ Even though this attack works quite well against software-based disk encryption 
 
 Hot-plug attacks~\cite{Mller2013SelfEncryptingDP} are attacks similar to cold boot attacks. However, compared to the cold boot attacks, where the RAM is inserted into the attacker system before the data in it is naturally destroyed, hot plug attacks instead move the disk into the attacker's system. This attack abuses the fact that SATA disks have a data cable and a separate power cable. Because of this, it is possible to switch the data cable into a different device without powering off and therefore locking the disk.
 
-In the Core standard, there exists a reset type called HotPlug. 
+In the Core standard~\cite{tcg-storage-core}, there exists a reset type called HotPlug. 
 Although this reset type is not described closer than the name in the standards, it most likely refers to the ATA/NVMe? hot plug TODO\cite{TODO}... 
 Using this reset type, it could possible to set an LR to lock when a hot plug is detected. However, as this reset type is not mandatory (nor optional) for Opal devices, and none of our Opal devices implemented it, we were not able to examine this solution further.
 However, even if the device would implement the HotPlug reset type, using it to prevent the hot plug attack would not be advisable as the hot-plugging process could be disabled in the attacker's system.

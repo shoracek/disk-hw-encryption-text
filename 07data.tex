@@ -7,6 +7,10 @@ In our analysis we have tested several internal SSD devices, by multiple manufac
 
 Is there something to really talk about? 
 
+As the Core standard introduces an entirely? new protocol for the communication and the stream encoding? we had to implement that ourselves.
+
+In order to 
+
 \subsection{Disk capabilities discovery}
 
 
@@ -25,9 +29,57 @@ The first part of the table contains values acquired through the level 0 discove
 There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
 Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.
 
-Although not a part of the discovery process, the utility can also access other functions that tell us more about the device, such as the Random method to generate random data.
+Although not a part of the discovery process, the utility can also access other functions that tell us more about the device, such as the Random method to generate random data. This provides with potential data to find obviously poorly implemented RNG, as taking larger sample of data for better analysis would take considerable amount of time. TODO: add the average times for getting nice amount of random bytes
 
+To provide more information about the disk, we also perform identify command. This means the IDENTIFY DEVICE command for ATA~\cite{acs-3} and the Identify command for NVMe~\cite{nvme-express-base-specification}.
 
+The data is generated in JSON format. Resulting table transformed into CSV can be seen in the attachment something.
+
+Due to the fact that we use the discovery tools without changing the properties of disk that they are used on (such as by activating the disks), we might not collect the same set of properties for all of the disks. Because of the state of activation, they might differ even between two disk with same hardware and firmware.
+
+\begin{figure}
+    \centering
+    \begin{lstlisting}[language=Bash]
+[root@the-machine-with-disks code]# ./opal_util discovery /dev/sda 2>/dev/null
+{
+"Metadata": {
+  "Filename": "/dev/sda"
+  "Type": "SATA"
+},
+"Identify": {
+  "Serial number": "150912400889      ",
+  "Firmware revision": "X21803",
+  "Model number": "SanDisk SD7UB2Q512G1122               "
+},
+"Discovery 0": {
+"TPer Feature": {
+ "ComID Mgmt Supported": 0,
+ "Streaming Supported": 1,
+ "Buffer Mgmt Supported": 0,
+ "ACK/NAK Supported": 0,
+ "Async Supported": 0,
+ "Sync Supported": 1
+},
+...
+      "0x000000090001ff01": {
+        "0x00": "0x000000090001ff01",
+        "0x02": "(PhysicalDriveOwner) 0x506879736963616c44726976654f776e6572",
+        "0x03": "0x00",
+        "0x04": "0x0000000000000000",
+        "0x05": "0x01",
+        "0x06": "0x00",
+        "0x07": "0x00",
+        "0x08": "0x00",
+        "0x09": "0x01",
+        "0x0a": "0x0000000b0001ff01",
+        "0x0b": "0x0000000000000000",
+        "0x0c": "0x0000000000000000"
+      },
+...
+    \end{lstlisting}
+    \caption{Discovered capabilities of a disk}
+    \label{fig:code}
+\end{figure}
 
 \section{Disk management}
 
@@ -38,8 +90,7 @@ TODO: something we can do better than sedutil????
 
 \section{TODOs}
 
-
-TODO: describe how different disks accept "bad" input: some disks don't mind empty list in parameter, other disks hate it (even close the session, some just return empty list  as response but success); or alignment of packets: 
+TODO: dewscribe how different disks accept "bad" input: some disks don't mind empty list in parameter, other disks hate it (even close the session, some just return empty list  as response but success); or alignment of packets: 
 
 TODO:  using Opal before taking ownership --- what happens if I just use default password for everything --- works just fine :)
 
