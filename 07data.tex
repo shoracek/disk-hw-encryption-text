@@ -1,15 +1,45 @@
+\chapter{Data collection}
 
-\chapter{Data (and our utility)}
 
-In our analysis we have tested several internal SSD devices, by multiple manufacturers and with different interfaces.
+The first part of the table contains values acquired through the level 0 discovery, the second part (starting with \verb|MaxComPacketSize|) contains values obtained through the level 2 discovery. In case the disk did not report a value, empty cell is used.
+There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
+Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.\todo{this is ocpypasted from the original... need to find what to write here...}
+
+
+
+
+\chapter{Data (and our utility), deprecated, going to move it into the data collection chapter}
+\todo{maybe one chapter our tool and one chapter the data?}
+
+We have implemented a tool to control Opal drives.
+Compared to the existing solutions, our tool is focused on simplicity and does not require any non-standard library. It is also written in C and therefore does not require any extra runtime dependencies. 
+Our tool is also able to scrape information about the disk, not only limited to Level 0 and Level 1 Discovery introduced in section \ref{section:opal_capability_discovery}, but also Level 2 Discovery, collecting information from all discoverable tables.
+
+In this chapter, we will first describe our tool, its architecture, and its abilities. 
+Afterwards, we will focus on data collected using this tool and its analysis. 
+The source code of the tool can be found in the appendix under the name TODO, and the collected data can be found in the appending under the name ALSOTODO.
+
+\section{Program}
 
 \subsection{Program structure}
+
+
+
+
+
 
 Is there something to really talk about? 
 
 As the Core standard introduces an entirely? new protocol for the communication and the stream encoding? we had to implement that ourselves.
 
 In order to 
+
+\section{Data}
+
+In our analysis we have tested several internal SSD devices, by multiple manufacturers and with different interfaces.
+
+more extensive collection of data was done using 
+
 
 \subsection{Disk capabilities discovery}
 

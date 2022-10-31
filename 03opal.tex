@@ -63,6 +63,7 @@ Security Provider (SP) is defined as a set of tables, methods and access control
 The Opal 2.0 standard defines that at least the Admin SP and Locking SP must be present in the TPer. The Admin SP is tasked with administrating the TPer and other SPs, which may include creating new SPs, deleting existing SPs, or providing information about SPs. The Locking SP provides access to functionality such as managing locking ranges, locking the drive, or managing access control. Both of these SPs are described more closely in later sections \ref{admin_sp} and \ref{locking_sp}.
 
 \section{Capability discovery}
+\label{section:opal_capability_discovery}
 
 In order to find out the properties and features of a particular device, there exists the so-called Discovery process. 
 % This is useful, among other things, because of i
@@ -243,7 +244,7 @@ There are two types of arguments: required arguments that all have to occur in t
 
 The last 5 bytes of the Method invocation are called Status List. It is a list consisting of a Status Code and two reserved bytes defined to be 0 bytes. A non-zero Status Code corresponds to an error response such as insufficient space, frozen SP, or usage of a method without sufficient authority.
 
-The method structure is used not only for the invocation of methods but also for the response, which uses parameters to return data.
+The method structure is used not only for the invocation of methods but also for the response\todo{actually, usually not true. usually the call token and the 2 uids are not there, it's there only for syncsession etc, where the response is different method i guess}, which uses parameters to return data.
 
 % object UID can be SP, table, row of table of a special object UID, SMUID --- session manager, used for session management
 

@@ -28,7 +28,7 @@ A command to lock the drive is missing because a drive with enabled ATA Security
 \section{sedutil}
 
 \emph{sedutil}\footnote{\url{https://github.com/Drive-Trust-Alliance/sedutil}} is a tool for management of SED disks, maintained by the Drive Trust Alliance.
-It currently supports the Enterprise and Opal SSCs (and additionally the remaining Pyrite, Opalite and Ruby SSCs in a fork of the project\footnote{\url{https://github.com/ChubbyAnt/sedutil}}).
+It currently supports the Enterprise and Opal SSCs (and additionally the remaining Pyrite, Opalite and Ruby SSCs in a fork of the project\footnote{\url{https://github.com/ChubbyAnt/sedutil}}) and NVMe and SATA interfaces.
 Even though it is currently the largest open-source project to control SED disks, the code repository does not seem to be currently active.
 
 This tool does not use the Linux Opal ioctl interface and instead uses the approach described in the subsection \ref{direct_communication_raw_ioctl}. This allows the tool not only to be multi-platform but also to use the Opal features in their entirety instead of only the subset introduced in the Opal ioctl interface.
@@ -73,10 +73,10 @@ The tool offers the following commands, grouped by their functionality:
 \item \verb|revertNoErase| --- reverts only the Locking SP, keeping the global range data.
     \end{itemize}
     
-    \item Enterprise-specific functionality: \begin{itemize}
-\item \verb|setBandsEnabled| ---
-\item \verb|setBandEnabled| --- 
-\item \verb|eraseLockingRange| ---
+    \item Enterprise-specific functionality\todo{actually find out what the bands are first, seem like just locking ranges, but hard to find source}: \begin{itemize}
+\item \verb|setBandsEnabled| --- enables all locking ranges.
+\item \verb|setBandEnabled| --- enables selected locking range.
+\item \verb|eraseLockingRange| --- cryptographically erases data in specified locking range.
     \end{itemize}
 \end{itemize}
 % For Discovery there are commands 
@@ -112,24 +112,28 @@ The tool offers the following commands, grouped by their functionality:
 
 \section{go-tcg-storage}
 
-The \emph{go-tcg-storage}\footnote{\url{https://github.com/open-source-firmware/go-tcg-storage}} is a Go library that does everything, and is actually supported. It has a few tools that let you do some things. It also supports more SSCs than others. Just found out about it, will need to look into it deeper and figure out why is it worse, so we won't look as bad.
+The \emph{go-tcg-storage}\footnote{\url{https://github.com/open-source-firmware/go-tcg-storage}} is a Go library, also providing CLI tools. Even though that compared to the previously introduced sedutil it is not as popular, it is currently in active development. It supports not only Opal 2.0 and Enterprise SSCs but also Ruby, the successor of Enterprise. It also, compared to sedutil, supports, in addition, the SAS interface.
+Although it implements a CLI, its capabilities are compared to sedutil very limited.\todo{how}
 
-CLI: Was able to generate random numbers, but only for some of the disks.
+
+% \todo{that does everything, and is actually supported.}
+\todo{It has a few tools that let you do some things. It also supports more SSCs than others. Just found out about it, will need to look into it deeper and figure out why is it worse, so we won't look as bad.}
+\todo{CLI: Was able to generate random numbers, but only for some of the disks. and very limited control over it}
 
 \section{TCGstorageAPI}
 
-Seagate's \emph{TCGstorageAPI}\footnote{\url{https://github.com/Seagate/TCGstorageAPI}} is yet another 
+Seagate's \emph{TCGstorageAPI}\footnote{\url{https://github.com/Seagate/TCGstorageAPI}} is library, that provides Python interface, and a CLI tool. Similarly to sedutil, it supports Opal and Enterprise SSCs.
 
-Provides a Python library, written in c++, and a CLI...
+\todo{Provides a Python library, written in c++, and a CLI...}
 
-Has a bunch of dependencies, most importantly boost, which is pretty big...
+\todo{Has a bunch of dependencies, most importantly boost, which is pretty big...}
 
-CLI: doesn't work with sdc "SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script"
-no random numbres
+\todo{CLI: doesn't work with sdc "SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script"
+no random numbres}
 
-offers test suite!!!
+\todo{offers test suite!!!}
 
-\section{fscrypt}
+\section{fscrypt - WIP}
 
 \todo{probably rework into text about the tool for management instead?}
 \todo{requires the filesystem to actually use the library In the following paragraphs, that should be redone, I am assuming ext4.}
