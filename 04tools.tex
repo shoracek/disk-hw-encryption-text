@@ -2,34 +2,37 @@
 \chapter{Existing tools}
 \label{chapter_tools}
 
-In order to give users the ability to manage their SED disks without the need to create their own programs to access existing interfaces, there exist several tools. 
+In order to give users the ability to manage their SED disks without the need to create their own programs to access existing interfaces, there exist several tools implementing the protocols introduced in chapters~\ref{chapter_hardware_disk_encryption}~and~\ref{chapter_opal}. 
 
-In this chapter, we will look at several existing tools that allow one to manage the encryption of disks.
+Note that for all the tools for managing SATA Opal devices, it is necessary to first set the \verb|allow_tpm| flag of the kernel libATA library to allow Trusted Computing commands~\cite{acs-3}. This can be done either by specifying it as a kernel flag \verb|libata.allow_tpm=1| or, if  by changing the value in the \verb|/sys/module/libata/parameters/allow_tpm| file.~\cite{TODO}\todo{where to find the instructions?, \url{https://wiki.archlinux.org/title/Self-encrypting_drives}}
 
-\section{Cryptsetup}
+% Some disks might provide their own software for their own proprietary hardware encryption. These are usually found separately on website or something, but some are provided as by the disk on an unecrypted partition.
+In this chapter, we will look at several existing popular open-source tools that allow one to manage the encryption of disks.
 
-\emph{Cryptsetup}\footnote{\url{https://gitlab.com/cryptsetup/cryptsetup}} is a tool for disk encryption setup. Although this tool supports several formats and volumes, such as ..., all of them are software, and there is no hardware encryption support as of now.\todo{probably remove this since it does not support any hardware encryption,,, yet}
+% \section{Cryptsetup}
+
+% \emph{Cryptsetup}\footnote{\url{https://gitlab.com/cryptsetup/cryptsetup}} is a tool for disk encryption setup. Although this tool supports several formats and volumes, such as ..., all of them are software, and there is no hardware encryption support as of now.\todo{probably remove this since it does not support any hardware encryption,,, yet}
 
 \section{hdparm}
  
-The \emph{hdparm}\footnote{\url{https://sourceforge.net/projects/hdparm}} tool provides a command line interface to control parameters of ATA disks. Among others, this tool gives access to control ATA Security Feature Set.
-The examples of SED-relevant commands for the functionality described in \ref{TODO} are:
+The \emph{hdparm}\footnote{\url{https://sourceforge.net/projects/hdparm}} tool provides a command line interface to control the parameters of ATA disks. Among others, this tool gives access to control ATA Security Feature Set.
+The examples of SED-relevant commands for the functionality described in subsection~\ref{subsection:enc_ata} are:
 \begin{itemize}
 \item Enable the ATA Security Feature Set:\\ \verb|hdparm --security-set-pass pwd /dev/sda|
 \item Disable ATA Security Feature Set:\\ \verb|hdparm --security-disable pwd /dev/sda|
 \item Unlock the disk:\\ \verb|hdparm --security-unlock pwd /dev/sda|
 \item Erase the disk:\\ \verb|hdparm --security-erase pwd /dev/sda|
 \end{itemize}
-Implicitly the user password is referred to in the commands, but \verb|--user-master| can be specified to select master or user password explicitly. While enabling the ATA Security Feature Set, it is also possible to use the \verb|--security-mode| option to choose between high and maximum security mode.
-A command to lock the drive is missing because a drive with enabled ATA Security Feature Set is locked when powered off.
+Implicitly the user password is referred to in the commands, but \verb|--user-master| can be specified to select master or user password explicitly. While enabling the ATA Security Feature Set, it is also possible to use the \verb|--security-mode| option to choose between high and maximum security modes.
+A command to lock the drive is missing because a drive with an enabled ATA Security Feature Set is locked when powered off.
 
 % ATA Security Feature Set: seems to be juts for ata and ata password, can it also work with our disks?
 
 \section{sedutil}
 
-\emph{sedutil}\footnote{\url{https://github.com/Drive-Trust-Alliance/sedutil}} is a tool for management of SED disks, maintained by the Drive Trust Alliance.
+\emph{sedutil}\footnote{\url{https://github.com/Drive-Trust-Alliance/sedutil}} is a tool for the management of SED disks maintained by the Drive Trust Alliance.
 It currently supports the Enterprise and Opal SSCs (and additionally the remaining Pyrite, Opalite and Ruby SSCs in a fork of the project\footnote{\url{https://github.com/ChubbyAnt/sedutil}}) and NVMe and SATA interfaces.
-Even though it is currently the largest open-source project to control SED disks, the code repository does not seem to be currently active.
+Even though it is currently the most prominent open-source project to control SED disks, being exclusively\todo[color=green]{exclusively as it is the only one mentioned, not that it is not mentioned elsewhere..., hmmm , sounds fine i guess} used in guides for using SED on Linux, the code repository seems to be at the time of writing inactive.
 
 This tool does not use the Linux Opal ioctl interface and instead uses the approach described in the subsection \ref{direct_communication_raw_ioctl}. This allows the tool not only to be multi-platform but also to use the Opal features in their entirety instead of only the subset introduced in the Opal ioctl interface.
 % ... although there currently certain limits for e.g. having only one admin ...
@@ -38,47 +41,52 @@ This tool does not use the Linux Opal ioctl interface and instead uses the appro
 The tool offers the following commands, grouped by their functionality:
 \begin{itemize}
     \item Discovery: \begin{itemize}
-\item \verb|isValidSED| --- lists SSCs supported by the selected disk.
-\item \verb|scan| --- performs \verb|isValidSED| command on every disk in the system.
-\item \verb|query| --- performs Level 0 and Level 1 Discovery on the selected disk.
-\item \verb|printDefaultPassword| --- prints the MSID password.
+\item \verb|isValidSED| command lists SSCs supported by the selected disk, the name of the disk and its firmware version.
+\item \verb|scan| command performs \verb|isValidSED| command on every disk in the system.
+\item \verb|query| command performs Level 0 and Level 1 Discovery on the selected disk.
+\item \verb|printDefaultPassword| command prints the MSID password of the selected disk.
     \end{itemize}
     
+\begin{samepage}
     \item TPer management: \begin{itemize}
-\item \verb|initialSetup| --- takes ownership of the disk, and initializes Locking SP, global LR and shadow MBR.
-\item \verb|setSIDPassword| --- changes the password of SID authority.
-\item \verb|setAdmin1Pwd| --- changes the password of Locking SP's first admin authority. 
-\item \verb|setPassword| --- changes the password of any supported Locking SP's authority.
+\item \verb|initialSetup| command takes ownership of the disk, initializes the Locking SP and the global LR, and enables MBR.
+\item \verb|setSIDPassword| command changes the password of the SID authority.
+\item \verb|setAdmin1Pwd| command changes the password of the Locking SP's first admin authority. 
+\item \verb|setPassword| command changes the password of any supported Locking SP's authority.
     \end{itemize}
+\end{samepage}
     
     \item Locking range management: \begin{itemize}
-\item \verb|listLockingRanges| --- prints information about all LRs,
-\item \verb|listLockingRange| --- prints information about a single LR,
-\item \verb|rekeyLockingRange| --- regenerates the LR's key (destroying the data in the LR in the process)
-\item \verb|setupLockingRange| --- sets the start and length of locking range,
-\item \verb|setLockingRange| --- sets ReadLocked and WriteLock of the LR depending on the chosen configuration (read-write, read-only, or locked).
-\item \verb|enableLockingRange| --- sets ReadLockEnabled and WriteLockEnabled of the LR. 
-\item \verb|disableLockingRange| --- unsets ReadLockEnabled and WriteLockEnabled of the LR. 
+\item \verb|listLockingRange| command prints information about a single LR, such as the start, length or lock status.
+\item \verb|listLockingRanges| command prints information about all LRs, similar to the previous command \verb|listLockingRange|.
+\item \verb|rekeyLockingRange| command regenerates the selected LR's key, destroying the data in the LR in the process.
+\item \verb|setupLockingRange| command sets the start and length of the locking range.
+\item \verb|setLockingRange| command sets ReadLocked and WriteLock of the LR depending on the chosen configuration (read-write, read-only, or locked).
+\item \verb|enableLockingRange| command sets ReadLockEnabled and WriteLockEnabled of the LR. 
+\item \verb|disableLockingRange| command unsets ReadLockEnabled and WriteLockEnabled of the LR. 
     \end{itemize}
     
     \item Shadow MBR management: \begin{itemize}
-\item \verb|setMBREnable| --- sets Enable column of the MBRControl table.
-\item \verb|setMBRDone| --- sets Done column of the MBRControl table.
-\item \verb|loadPBAimage| --- writes the contents of a file into the MBR table to be used as the shadow MBR.
+\item \verb|setMBREnable| command sets Enable column of the MBRControl table.
+\item \verb|setMBRDone| command sets the Done column of the MBRControl table.
+\item \verb|loadPBAimage| command writes the contents of a file into the MBR table to be used as the shadow MBR.
     \end{itemize}
-    
+
+\begin{samepage}
     \item Reverting the device: \begin{itemize}
-\item \verb|revertTPer| --- reverts the TPer using the MSID password.
-\item \verb|yesIreallywanttoERASEALLmydatausingthePSID| --- reverts the TPer using the PSID password.
-\item \verb|revertNoErase| --- reverts only the Locking SP, keeping the global range data.
+\item \verb|revertTPer| command reverts the TPer using the SID authority.
+\item \verb|yesIreallywanttoERASEALLmydatausingthePSID| command reverts the TPer using the PSID password.
+\item \verb|revertNoErase| command reverts only the Locking SP, keeping the global range data.
     \end{itemize}
+\end{samepage}
     
-    \item Enterprise-specific functionality\todo{actually find out what the bands are first, seem like just locking ranges, but hard to find source}: \begin{itemize}
-\item \verb|setBandsEnabled| --- enables all locking ranges.
-\item \verb|setBandEnabled| --- enables selected locking range.
-\item \verb|eraseLockingRange| --- cryptographically erases data in specified locking range.
+    \item Enterprise-specific functionality\todo[color=green]{actually find out what the bands are first, seem like just locking ranges, but hard to find source, .... yea}: \begin{itemize}
+\item \verb|setBandsEnabled| command enables the usage of all locking ranges.
+\item \verb|setBandEnabled| command enables the usage of selected locking range.
+\item \verb|eraseLockingRange| command cryptographically erases data in a specified locking range.
     \end{itemize}
 \end{itemize}
+
 % For Discovery there are commands 
 % \verb|isValidSED| which lists supported SSCs by the selected disk,
 % \verb|scan| which performs \verb|isValidSED| command on every disk in the system,
@@ -112,123 +120,146 @@ The tool offers the following commands, grouped by their functionality:
 
 \section{go-tcg-storage}
 
-The \emph{go-tcg-storage}\footnote{\url{https://github.com/open-source-firmware/go-tcg-storage}} is a Go library, also providing CLI tools. Even though that compared to the previously introduced sedutil it is not as popular, it is currently in active development. It supports not only Opal 2.0 and Enterprise SSCs but also Ruby, the successor of Enterprise. It also, compared to sedutil, supports, in addition, the SAS interface.
-Although it implements a CLI, its capabilities are compared to sedutil very limited.\todo{how}
+\emph{go-tcg-storage}\footnote{\url{https://github.com/open-source-firmware/go-tcg-storage}} is a Go library for managing TCG Storage disks, also providing CLI tools. Even though when compared to the previously introduced sedutil, it is not as popular, it is currently in active development. It supports not only Opal 2.0 and Enterprise SSCs but also Ruby, the successor of Enterprise. It also, compared to sedutil, supports, in addition, the SAS interface.
+Although it implements a CLI, its capabilities compared to sedutil are very limited, as can be seen from the following paragraphs. The CLI consists of three utilities: \verb|sedlockctl|, \verb|tcgdiskstat|, and \verb|tcgsdiag|. 
+For some of the tested disks, the utilities were not able to start a session due to time out and therefore function correctly.
+
+The \verb|sedlockctl| utility allows one to control a SED disk. At the time of writing it offers the following commands: \begin{itemize}
+ \item \verb|list| command lists all LRs.
+ \item \verb|lock-all| command locks all LRs.
+ \item \verb|unlock-all| command unlocks all LRs.
+ \item \verb|mbrdone| command sets the MBRDone cell to the desired value.
+ \item \verb|read-mbr| command prints the shadow MBR.
+\end{itemize}
+
+The \verb|tcgdiskstat| utility provides information about supported SSCs and firmware version for each disk, similar to the sedutil's \verb|scan| command. Unlike sedutil's \verb|scan|, it also prints whether encryption is supported, MBR is enabled, or SID authority is blocked.
+
+The \verb|tcgsdiag| utility performs Level 0 and Level 1 Discovery, similar to sedutil's \verb|query| command. It also prints the MSID password, random numbers generated by the disk, and contents of the TPerInfo table. 
 
 
 % \todo{that does everything, and is actually supported.}
-\todo{It has a few tools that let you do some things. It also supports more SSCs than others. Just found out about it, will need to look into it deeper and figure out why is it worse, so we won't look as bad.}
-\todo{CLI: Was able to generate random numbers, but only for some of the disks. and very limited control over it}
+\todo[color=green]{It has a few tools that let you do some things. It also supports more SSCs than others. Just found out about it, will need to look into it deeper and figure out why is it worse, so we won't look as bad.}
+\todo[color=green]{CLI: Was able to generate random numbers, but only for some of the disks. and very limited control over it}
 
 \section{TCGstorageAPI}
 
-Seagate's \emph{TCGstorageAPI}\footnote{\url{https://github.com/Seagate/TCGstorageAPI}} is library, that provides Python interface, and a CLI tool. Similarly to sedutil, it supports Opal and Enterprise SSCs.
+Seagate's \emph{TCGstorageAPI}\footnote{\url{https://github.com/Seagate/TCGstorageAPI}} is a library that provides a Python interface and a CLI tool. Similarly to sedutil, it supports Opal and Enterprise SSCs.
+Compared to the previous tools, this one offers the most functionality, but this comes at the cost of also the largest dependencies. The tool has the most complete support for Enterprise SSC. % and also offers a unittest command. However, the unittest command 
 
-\todo{Provides a Python library, written in c++, and a CLI...}
+When used with a device implementing Opal 1 SSC, the CLI tool reported ``SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script'', even though the device also implemented a supported Opal 2 SSC.
+\todo[color=green]{CLI: doesn't work with sdc "SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script", no random numbres}
 
-\todo{Has a bunch of dependencies, most importantly boost, which is pretty big...}
+% \todo{Provides a Python library, written in c++, and a CLI...}
 
-\todo{CLI: doesn't work with sdc "SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script"
-no random numbres}
+% \todo{Has a bunch of dependencies, most importantly boost, which is pretty big...}
 
-\todo{offers test suite!!!}
 
-\section{fscrypt - WIP}
+\todo[color=green]{offers test suite!!!}
 
-\todo{probably rework into text about the tool for management instead?}
-\todo{requires the filesystem to actually use the library In the following paragraphs, that should be redone, I am assuming ext4.}
+\section{sedcli}
 
-\subsection{Usage}
+
+\emph{sedcli}\footnote{\url{https://github.com/sedcli/sedcli}} is a tool for managing SED devices. Although the only supported disk interface is NVMe and the only supported SSC is Opal, it offers support for the Key Management Interoperability Protocol and key management servers.
+
+\section{fscrypt}
+
+% TODO: test CLI fscrypt...
+
+\emph{fscrypt} is a tool for the management of Linux filesystem encryption. Although it does not provide explicit support for inline encryption, thanks to the kernel space library fscrypt providing inline encryption in a transparent way, it can still be used to manage file system encryption with inline encryption.
+
+% Even though the \emph{fscrypt} tool does not provide a way 
+% Since the kernel space library fscrypt provides inline encryption in a transparent way, it is possible to use it 
+% The user space library \emph{fscrypt} offers a way to configure an inline encryption for a given file descriptor. No CLI is provided and so the C library must be used instead.
 
 As of now, block layer inline encryption is supported only by two file systems in Linux: ext4 and F2FS. 
-In this part, we will focus only on the ext4 filesystem.
+In the following paragraphs, we will focus only on the ext4 filesystem.
 
-First of all, the inline encryption needs to be enabled in the kernel configuration. This means that the Linux kernel configuration option \verb|CONFIG_FS_ENCRYPTION_INLINE_CRYPT| needs to be enabled.
-In order to start using the file system with encryption, it needs to be mounted with the option to specify the usage of inline encryption. 
+First of all, inline encryption needs to be enabled in the kernel configuration. This means that the Linux kernel configuration option \verb|CONFIG_FS_ENCRYPTION_INLINE_CRYPT| needs to be enabled.
+In order to start using inline encryption on a file system, it needs to be mounted with the option to specify the usage of inline encryption.
 \begin{lstlisting}[language=bash]
 mount -t ext4 /dev/foo /mnt/foo -o inlinecrypt
 \end{lstlisting}
-It is not enough to specify the inline encryption flag. The encryption itself also must be enabled in the file system. On ext4 file systems, the encryption can be enabled after mounting like so:
+It is not enough to only specify the inline encryption flag. The encryption itself also must be enabled in the file system. On ext4 file systems, the encryption can be enabled after mounting like so:
 \begin{lstlisting}[language=bash]
 tune2fs -O encrypt /dev/foo
 \end{lstlisting}
-After this, fscrypt can be used as normal and it will use inline encryption for this filesystem.
+After this, fscrypt can be used as usual, and it will use inline encryption for this filesystem.
+% Although it is possible to use the kernel space fscrypt library directly, there exist a user space utility with same name.
 
-In order to encrypt a folder using the kernel space fscrypt, the following must be done: an encryption key must be added and the encryption policy must be created. In C, this can be done the following way:
-\begin{lstlisting}[language=c]
-int fd = open(pathname, O_RDONLY | O_CLOEXEC);
+% In order to encrypt a folder using the kernel space fscrypt, the following must be done: an encryption key must be added and the encryption policy must be created. In C, this can be done the following way:
+% \begin{lstlisting}[language=c]
+% int fd = open(pathname, O_RDONLY | O_CLOEXEC);
 
-// add a key
-struct fscrypt_add_key_arg *key_request = calloc(1, sizeof(struct fscrypt_add_key_arg) + key_len);
+% // add a key
+% struct fscrypt_add_key_arg *key_request = calloc(1, sizeof(struct fscrypt_add_key_arg) + key_len);
 
-key_request->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
-key_request->key_id = 0;
-key_request->raw_size = key_len;
-memcpy(key_request->raw, key, key_len);
-ioctl(fd, FS_IOC_ADD_ENCRYPTION_KEY, key_request);
+% key_request->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
+% key_request->key_id = 0;
+% key_request->raw_size = key_len;
+% memcpy(key_request->raw, key, key_len);
+% ioctl(fd, FS_IOC_ADD_ENCRYPTION_KEY, key_request);
 
-// set a policy
-struct fscrypt_policy_v2 policy_request = { 0 };
+% // set a policy
+% struct fscrypt_policy_v2 policy_request = { 0 };
 
-policy_request.version = FSCRYPT_POLICY_V2;
-policy_request.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
-policy_request.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
-policy_request.flags = FSCRYPT_POLICY_FLAGS_PAD_8 | FSCRYPT_POLICY_FLAGS_PAD_16 | FSCRYPT_POLICY_FLAGS_PAD_32;
-memcpy(policy_request.master_key_identifier, key_request->key_spec.u.identifier, FSCRYPT_KEY_IDENTIFIER_SIZE);
-ioctl(fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy_request);
-\end{lstlisting}
-This code sets up an encryption policy for the file specified by the pathname. 
-
-\subsection{Implementation}
-\todo{maybe remove completely?, doesn't seem to fit much...}
-
-During mounting the ``inlinecrypt''/\verb|SB_INLINECRYPT|  flag is written into the \verb|super_block| structure.
-
-It all starts in \verb|__ext4_new_inode|. This is the internal function used when creating new inodes, called by functions such as \verb|ext4_create| when creating a new file.
-
-The function (if it is not inode used for large extended attributes?) calls \verb|fscrypt_prepare_new_inode|.
-
-\verb|fscrypt_prepare_new_inode -> fscrypt_setup_encryption_info ->| \verb|setup_file_encryption_key ->  fscrypt_select_encryption_impl|
-
-In \verb|fscrypt_select_encryption_impl| there is actually the only place where the \verb|SB_INLINECRYPT| flag is used.
-... Calls \verb|blk_crypto_config_supported| to check the device's crypto profile.
-Afterwards, \verb|fscrypt_select_encryption_impl| function sets the \verb|(fscrypt_info *)ci->ci_inlinecrypt|.
-
-\verb|setup_per_mode_enc_key| then sets the \verb|(fscrypt_info *)ci->ci_enc_key|.
-
-\paragraph{fscrypt - How does it work? - Usage}
-
-The bio function is stored in \\ \verb|(struct bio *)bio->(struct bio_crypt_ctx *)bi_crypt_context|
-
-Function \verb|fscrypt_set_bio_crypt_ctx| changes the file's bio to use inline encryption... simply calls the blk layer \verb|bio_crypt_set_ctx|.
-
-Calling \verb|submit_bio| like normally ... \verb|__submit_bio| calls \verb|__blk_crypto_bio_prep|...
-
-\blockquote{If the bio crypt context provided for the bio is supported by the underlying device's inline encryption hardware, do nothing.}
-
-\verb|__blk_crypto_rq_bio_prep| however sets the context of the request to the one of the bio... 
-After the bio prep  \verb|blk_mq_submit_bio| gets called (which calls \verb|blk_mq_bio_to_request|, and after that also \verb|blk_crypto_init_request->blk_crypto_get_keyslot| which updates the devices keyslot to contain the new key..., but does nothing if the device does not have keyslots)..... the info about the key to use then has to be acquired by the driver from \verb|request->|
-
-
-Most important are probably structures \verb|blk_crypto_ll_ops| and \verb|blk_crypto_profile|... just two operations, program key and evict key. 
+% policy_request.version = FSCRYPT_POLICY_V2;
+% policy_request.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
+% policy_request.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
+% policy_request.flags = FSCRYPT_POLICY_FLAGS_PAD_8 | FSCRYPT_POLICY_FLAGS_PAD_16 | FSCRYPT_POLICY_FLAGS_PAD_32;
+% memcpy(policy_request.master_key_identifier, key_request->key_spec.u.identifier, FSCRYPT_KEY_IDENTIFIER_SIZE);
+% ioctl(fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy_request);
+% \end{lstlisting}
+% This code sets up an encryption policy for the file specified by the pathname. 
 
 
 
-how to get crypto profile from outside..
+\todo[color=green]{probably rework into text about the tool for management instead?.......}
+\todo[color=green]{requires the filesystem to actually use the library In the following paragraphs, that should be redone, I am assuming ext4......}
+
+% \subsection{Usage}
+
+
+% \subsection{Implementation}
+% \todo{maybe remove completely?, doesn't seem to fit much...}
+
+% During mounting the ``inlinecrypt''/\verb|SB_INLINECRYPT|  flag is written into the \verb|super_block| structure.
+
+% It all starts in \verb|__ext4_new_inode|. This is the internal function used when creating new inodes, called by functions such as \verb|ext4_create| when creating a new file.
+
+% The function (if it is not inode used for large extended attributes?) calls \verb|fscrypt_prepare_new_inode|.
+
+% \verb|fscrypt_prepare_new_inode -> fscrypt_setup_encryption_info ->| \verb|setup_file_encryption_key ->  fscrypt_select_encryption_impl|
+
+% In \verb|fscrypt_select_encryption_impl| there is actually the only place where the \verb|SB_INLINECRYPT| flag is used.
+% ... Calls \verb|blk_crypto_config_supported| to check the device's crypto profile.
+% Afterwards, \verb|fscrypt_select_encryption_impl| function sets the \verb|(fscrypt_info *)ci->ci_inlinecrypt|.
+
+% \verb|setup_per_mode_enc_key| then sets the \verb|(fscrypt_info *)ci->ci_enc_key|.
+
+% \paragraph{fscrypt - How does it work? - Usage}
+
+% The bio function is stored in \\ \verb|(struct bio *)bio->(struct bio_crypt_ctx *)bi_crypt_context|
+
+% Function \verb|fscrypt_set_bio_crypt_ctx| changes the file's bio to use inline encryption... simply calls the blk layer \verb|bio_crypt_set_ctx|.
+
+% Calling \verb|submit_bio| like normally ... \verb|__submit_bio| calls \verb|__blk_crypto_bio_prep|...
+
+% \blockquote{If the bio crypt context provided for the bio is supported by the underlying device's inline encryption hardware, do nothing.}
+
+% \verb|__blk_crypto_rq_bio_prep| however sets the context of the request to the one of the bio... 
+% After the bio prep  \verb|blk_mq_submit_bio| gets called (which calls \verb|blk_mq_bio_to_request|, and after that also \verb|blk_crypto_init_request->blk_crypto_get_keyslot| which updates the devices keyslot to contain the new key..., but does nothing if the device does not have keyslots)..... the info about the key to use then has to be acquired by the driver from \verb|request->|
+
+
+% Most important are probably structures \verb|blk_crypto_ll_ops| and \verb|blk_crypto_profile|... just two operations, program key and evict key. 
+
+
+
+% how to get crypto profile from outside..
 
 
 
 
-Where does the hardware come to play?
+% Where does the hardware come to play?
 
-\verb|ufshcd_exec_raw_upiu_cmd()->ufshcd_issue_devman_upiu_cmd()->ufshcd_prepare_req_desc_hdr()->ufshcd_prepare_req_desc_hdr_crypto()| sets the header with the correct keyslot.
-
-
-
-
-
-
-\section{Proprietary solutions}
-
-Some disks might provide their own software for their own proprietary hardware encryption. These are usually found separately on website or something, but some are provided as by the disk on an unecrypted partition.
+% \verb|ufshcd_exec_raw_upiu_cmd()->ufshcd_issue_devman_upiu_cmd()->ufshcd_prepare_req_desc_hdr()->ufshcd_prepare_req_desc_hdr_crypto()| sets the header with the correct keyslot.
 

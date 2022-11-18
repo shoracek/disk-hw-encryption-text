@@ -1,0 +1,172 @@
+\chapter{Data collection}
+
+In order to compare a large number of Opal disks...
+
+so that we can compare their capabilities, 
+
+For the purposes of this ... we have collected a limited amount ...
+
+For these reasons we will use our \verb|discovery| utility, introduced in the subsection~\ref{utility_discovery}.
+
+The raw collected data can be found in the appendix
+
+As our \verb|discovery| utility collects data without permanently affecting the device, we were able to 
+
+since the data discovered using the utility are generated in a format like JSON with many utilities to parse it , we can use some of those already existing utilities to compare the properties of multiple disks...
+
+Selection of some of the more interesting properties can be seen in table~\ref{fig:properties_table}. the values were edited to be more readable.
+
+
+
+    \begin{table}[]
+    \centering
+\begin{tabular}{|l|l|l|}
+\hline
+                    & K\_AES\_128.Mode & K\_AES\_256.Mode \\ \hline
+SanDisk X300s       &                  & CBC              \\ \hline
+Kingston KC600      & XTS              & XTS              \\ \hline
+Samsung SSD 850 PRO &                  & XTS              \\ \hline
+\end{tabular}
+    \caption{Comparison of selected disk properties}
+    \label{fig:properties_table}
+\end{table}
+
+
+
+
+The first part of the table contains values acquired through the level 0 discovery, the second part (starting with \verb|MaxComPacketSize|) contains values obtained through the level 2 discovery. In case the disk did not report a value, empty cell is used.
+There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
+Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.\todo{this is ocpypasted from the original... need to find what to write here...}
+
+
+
+
+\chapter{Data (and our utility), deprecated, going to move it into the data collection chapter}
+\todo{maybe one chapter our tool and one chapter the data?}
+
+We have implemented a tool to control Opal drives.
+Compared to the existing solutions, our tool is focused on simplicity and does not require any non-standard library. It is also written in C and therefore does not require any extra runtime dependencies. 
+Our tool is also able to scrape information about the disk, not only limited to Level 0 and Level 1 Discovery introduced in section \ref{section:opal_capability_discovery}, but also Level 2 Discovery, collecting information from all discoverable tables.
+
+In this chapter, we will first describe our tool, its architecture, and its abilities. 
+Afterwards, we will focus on data collected using this tool and its analysis. 
+The source code of the tool can be found in the appendix under the name TODO, and the collected data can be found in the appending under the name ALSOTODO.
+
+\section{Program}
+
+\subsection{Program structure}
+
+
+
+
+
+
+Is there something to really talk about? 
+
+As the Core standard introduces an entirely? new protocol for the communication and the stream encoding? we had to implement that ourselves.
+
+In order to 
+
+\section{Data}
+
+In our analysis we have tested several internal SSD devices, by multiple manufacturers and with different interfaces.
+
+more extensive collection of data was done using 
+
+
+\subsection{Disk capabilities discovery}
+
+
+In order to collect information about Opal capabilities of the disks, we have written an utility program. This program uses the direct communication described in section~\ref{TODO} to communicate with the disk. We have decided to use the direct communication instead of the primarily because the capability to perform the discovery process using the Linux Opal ioctl is currently not possible. Even though there are patches being suggested, even if they were to be accepted, only the newest version of Linux kernel would support this feature, limiting the sample size.
+However, because this approach requires separate implementations of the disk interface commands, something about how this limits us only to a few disk interfaces because of testing, but it's not such a problem because they have a majority share, so find some source that this is actually true.
+The utility program performs the level 0 and level 1 discovery and the identify command to gather information about the disk.
+The aggregated and formatted output can be seen in table~\ref{table:data}.
+
+Compared to the two previous levels, the level 2 discovery is more complicated. The level 2 discovery is based on reading tables. Since the standard leaves space for vendor unique tables, we need to first discover these tables. This is done by first reading the SP table of the Admin SP, getting a list of all the SPs in the TPer. Afterwards, we read the Table table of each of the found SPs, getting a list of all tables in each of the SPs. Since each table used in this table discovery process is mandatory, we should be able to get a list of all the tables in the TPer this way. Finally, we can iterate through all the tables, read each entry, and save the contents.
+
+Output of the level 2 discovery depends on several factors: the state of the TPer, the authority used during the discovery...
+The state of the TPer defines which tables and SPs are available..., It is not desirable to change this state by activating the Locking SP, since that could have unwanted consequences for the future use of Opal on this device by the owner.
+The admin authority on the other hand could be optionally provided by the user. However, none of the authorities can access all the tables\footnote{Counterintuitively, access protected by \texttt{ACE\_ANYBODY}, can be only be accessed by the Anybody authority and not any of the higher authority authorities, such as Admin authorities.}, and the information accessible by higher authorities is only potentially sensitive information. So this is a non-issue.
+
+The first part of the table contains values acquired through the level 0 discovery, the second part (starting with \verb|MaxComPacketSize|) contains values obtained through the level 2 discovery. In case the disk did not report a value, empty cell is used.
+There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
+Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.
+
+Although not a part of the discovery process, the utility can also access other functions that tell us more about the device, such as the Random method to generate random data. This provides with potential data to find obviously poorly implemented RNG, as taking larger sample of data for better analysis would take considerable amount of time. TODO: add the average times for getting nice amount of random bytes
+
+To provide more information about the disk, we also perform identify command. This means the IDENTIFY DEVICE command for ATA~\cite{acs-3} and the Identify command for NVMe~\cite{nvme-express-base-specification}.
+
+The data is generated in JSON format. Resulting table transformed into CSV can be seen in the attachment something.
+
+Due to the fact that we use the discovery tools without changing the properties of disk that they are used on (such as by activating the disks), we might not collect the same set of properties for all of the disks. Because of the state of activation, they might differ even between two disk with same hardware and firmware.
+
+\begin{figure}
+    \centering
+    \begin{lstlisting}[language=Bash]
+[root@the-machine-with-disks code]# ./opal_util discovery /dev/sda 2>/dev/null
+{
+"Metadata": {
+  "Filename": "/dev/sda"
+  "Type": "SATA"
+},
+"Identify": {
+  "Serial number": "150912400889      ",
+  "Firmware revision": "X21803",
+  "Model number": "SanDisk SD7UB2Q512G1122               "
+},
+"Discovery 0": {
+"TPer Feature": {
+ "ComID Mgmt Supported": 0,
+ "Streaming Supported": 1,
+ "Buffer Mgmt Supported": 0,
+ "ACK/NAK Supported": 0,
+ "Async Supported": 0,
+ "Sync Supported": 1
+},
+...
+      "0x000000090001ff01": {
+        "0x00": "0x000000090001ff01",
+        "0x02": "(PhysicalDriveOwner) 0x506879736963616c44726976654f776e6572",
+        "0x03": "0x00",
+        "0x04": "0x0000000000000000",
+        "0x05": "0x01",
+        "0x06": "0x00",
+        "0x07": "0x00",
+        "0x08": "0x00",
+        "0x09": "0x01",
+        "0x0a": "0x0000000b0001ff01",
+        "0x0b": "0x0000000000000000",
+        "0x0c": "0x0000000000000000"
+      },
+...
+    \end{lstlisting}
+    \caption{Discovered capabilities of a disk}
+    \label{fig:code}
+\end{figure}
+
+\section{Disk management}
+
+Other than the Discovery process described earlier, the utility can also be used for managing a SED device. For this application it offers several commands.
+The commands allow basic interaction with a SED disk, such as taking ownership of the disk, reverting the disk, creating locking ranges, or locking the disk. However, it is possible to easily extend the tool to support also more advanced use cases, something about how it's thanks to its good quality ;).
+
+TODO: something we can do better than sedutil????
+
+\section{TODOs}
+
+TODO: describe how different disks accept "bad" input: some disks don't mind empty list in parameter, other disks hate it (even close the session, some just return empty list  as response but success); or alignment of packets: 
+
+TODO:  using Opal before taking ownership --- what happens if I just use default password for everything --- works just fine :)
+
+TODO: try to lock only reading, how to write/can I write? -- can do just fine :)
+
+TODO: why do some disks have maxinstances of base template one???
+TODO: missing DataRemovalMechanism table
+
+
+
+TODO: activate sets from manufactured-inactive to manufactured, admin sp starts in manufactured, how to use datastore extension of actiavte then?
+SPObjectUID.Activate[
+DataStoreTableSizes = list [ uintegers ]
+]
+=>
+[ ]

@@ -1,7 +1,8 @@
 
 \chapter{Hardware disk encryption}
+\label{chapter_hardware_disk_encryption}
 
-\emph{Hardware disk encryption} is a technology that provides confidentiality of data stored on a storage device using encryption provided by hardware specialized for encrypting data transferred to and decrypting data transferred from disk.
+\emph{Hardware disk encryption} is a technology that provides confidentiality of data stored on a storage device using encryption provided by hardware specialised for encrypting data transferred to and decrypting data transferred from disk.
 
 % Some general overview about what it is, I guess., maybe talk about both sw and hw enc instead
 
@@ -11,43 +12,86 @@ Generally, disk encryption is done by encrypting the saved data using a data enc
 
 
 % mention LUKS somewhere...
+The data encryption process can be conducted in logically and physically different places, depending on the type of disk encryption. 
+Even though software disk encryption often uses cryptographic co-processors for hardware acceleration, since they are for general usage and are not limited to disk input/output, we consider them out of the scope of this thesis.
+In the following sections of this chapter, we will further describe two types of hardware disk encryption.
 
-The data encryption process can be conducted in logically and physically different places, depending on the type of disk encryption. In the following sections of this chapter, we will further describe three such types.
+
+% \todo{rethink where to put this... maybe tools?}
+
+% \paragraph{fscrypt}
+
+% The kernel space library \emph{fscrypt} works on a filesystem level.
+% It is more flexible compared to the block device level dm-crypt, as it can limit the encryption to only some files. However, fscrypt does not encrypt all information for that file, and the metadata (excluding the filename) are left unencrypted.
+
+% Although fscrypt offers software encryption by default, inline encryption is also supported.
+% The usage of inline encryption in fscrypt is described in more detail later in chapter~\ref{chapter_tools}.
+
+% There also exists a user space application with the same name\footnote{\url{https://github.com/google/fscrypt}}, that can be used to control encryption of file systems using kernel space fscrypt.
+
+\todo[color=green]{maybe just mention that we don't consider using crypto coprocessor hardware disk encryption}
+
+% % \section{Software disk encryption}
+
+% % As an alternative to hardware encryption, there exists software disk encryption. Compared to hardware disk encryption, software disk encryption does not require specialised hardware.
+% % However, even though specialised hardware is not required, performance is often improved using cryptographic coprocessors.
+
+% % \todo{probably just a quick overview, ... maybe change the chapter to just "disk encryption"... or mention this just shortly at the start...}
+
+% % There are several available software encryption libraries and subsystems in the Linux kernel. 
+% % In this section, we will mention only two of them, each representing a different approach to software encryption.
+
+
+% \paragraph{dm-crypt}
+
+% The subsystem \emph{dm-crypt} works on the block device level. It can encrypt any data, including metadata or partition tables, but it does not offer precise control over what is encrypted, and the entire filesystem must be encrypted. 
+% % Since it is a device mapper target, it also needs access to the block device.
+
+% In order to control dm-crypt encryption, there exists a tool called cryptsetup, described in more detail later in chapter~\ref{chapter_tools}.
+
+% \todo[color=green]{I don't think that inline encryption is supported AFAIK, does not require any extra implementations on the side of drivers or file system or anything, right?}
+
+
+
+
 
 \section{Self-encrypting drives}
 
-\emph{Self-encrypting drive} (SED) is a storage device with built-in disk encryption hardware. Having built-in disk encryption hardware enables the disk to automatically encrypt the incoming data and decrypt the outgoing data. 
+\emph{Self-encrypting drive} (SED) is a storage device with built-in disk encryption hardware. Having built-in disk encryption hardware enables the disk to encrypt the incoming data and decrypt the outgoing data automatically. 
 The data saved on the disk is protected two-fold: by access control and by encryption.
-Access control denies any input-output operation until the host is authorized.
-Encryption protects the device even from attacks with physical access, where the access control is bypassed.
+Access control denies input/output operations until the host is authorised.
+Encryption protects the device even from attacks with physical access, where the access control could be bypassed.
 
-The encryption of the data is usually active even if the security mechanism of the device are not activated and the device is not protected by a password. This has the advantage that a non-activated disk can be activated and protected by a password without a need to reencrypt all data on the disk
-SEDs also might not require management by the host system after the initial unlocking. Even if multiple sections with different keys or passwords are defined on the disk, after they are unlocked no future key management is required.
-Thanks to the specialized encryption chip, SEDs have not only increased performance, reduced CPU usage, and reduced power consumption~\cite{comparing_the_power}.
+The encryption of the data is usually active even if the security mechanism of the device is not activated and the device is not protected by a password. This has the advantage that a non-activated disk can be activated and protected by a password without a need to re-encrypt all data on the disk or to quickly erase data on the disk by erasing the DEK.
+SEDs also might not require management by the host system after the initial unlocking. 
+% Even if multiple sections with different keys or passwords are defined on the disk, after they are unlocked, no future key management is required.
+Thanks to the usage of specialised encryption chips, SEDs offer increased performance, reduced CPU usage, and reduced power consumption~\cite{comparing_the_power} compared to software encryption.
 Since the encryption keys are not actively used by the host system, they do not have to be in the memory, which provides protection against malicious software running in the host system. 
+
 % Furthermore, SEDs also can be combined with security standards such as FIPS-140 to provide further tamper-proof environment for the active keys.
 
 % Over other approaches, SEDs have several advantages, such as the possibility of protecting the keys using a tamper-proof environment.
 
 % Some of the advantages are shared with inline encryption, like improved performance, reduced CPU usage, or power consumption~\cite{comparing_the_power}.
 
-% Increasing number of disks does not introduce decrpytion 
+% Increasing number of disks does not introduce decryption 
 
 % Self-encrypting drives carry over other disk encryption approaches. Some of those advantages are something like no need for re-encryption of all the data to activate encryption or no need for modification of software on the system.
 
-In order to provide an interface to control the encryption of the disk, such as unlocking or changing the password, there exist several standards. Other than the series of standards defined by the Trusted Computing Group discussed later in chapter \ref{chapter_opal}, there are other standards used by SEDs.
+In order to provide an interface to control the encryption of the disk, such as unlocking or changing the password, there exist several standards. Other than the series of standards defined by the Trusted Computing Group discussed in detail later in chapter \ref{chapter_opal}, there are other standards used by SEDs.
 % \cite{https://trustedcomputinggroup.org/resource/self-encrypting-drives-sed-overview/}
 
 % at least try to mention ATA security (but it is just access control mechanism, no encryption... soooo),,, which means also mentioning opal,,,, and TCG Enterprise...
 
 \subsection{ATA Security Feature Set}
+\label{subsection:enc_ata}
 
 ATA Security Feature Set~\cite{acs-3} allows one to protect the data and configuration of the disk.
 It offers commands to set a password, unlock the disk, erase the data on the disk, freeze the device, and disable the password.
 
 In order to authenticate to the disk, there are two passwords, the Master password, initially set by the manufacturer, and the User password.
 The usage of the Master password to unlock or disable the security can be disabled by setting the Master Password Capability bit while setting the User password. Even if the Master password is disabled for unlocking the disk or disabling the locking, it can still be used for erasing the disk.
-The disk protection is enabled by setting the User password. After the device is turned on again, the device is locked and to access the data on the disk or use some of the ATA commands, and it needs to be unlocked by providing a password using the unlock command. By disabling the User password, the protection of the device can be disabled.
+The disk protection is enabled by setting the User password. After the device is turned on again, the device is locked and to access the data on the disk or use some of the ATA commands, it needs to be unlocked by providing a password using the unlock command. By disabling the User password, the protection of the device can be disabled.
 
 However, the ATA Security Feature Set itself does not provide encryption of the data saved on the disk, only access control.
 Nevertheless, some of the SED solutions use ATA Security commands as their interface to provide access to their own implementation of the disk encryption and disk unlocking~\cite{self_encrypting_deception}.
@@ -59,61 +103,38 @@ Nevertheless, some of the SED solutions use ATA Security commands as their inter
 \subsection{Proprietary solutions}
 
 There also exist proprietary alternatives to the previously introduced standards. Such disks are then often managed either by software downloaded from the manufacturer's site or by using software from a special partition on the disk.
-An example of such are disks from Western Digital's My Passport and My Book series~\cite{got_hw_crypto}, or disks in IBM PureData System for Analytics N3001~\cite{ibm_sed}.
+An example of such are disks from Western Digital's My Passport and My Book series~\cite{got_hw_crypto} or disks in IBM PureData System for Analytics N3001~\cite{ibm_sed}.
 
-\todo{is it okay to cite vulnerability paper in such case? maybe find something else to widen the horizons.}
+\todo[color=green]{is it okay to cite vulnerability paper in such case? maybe find something else to widen the horizons. it's fine}
 
-\todo{Fact check this. Maybe just integrate the subsection into something else.}
+\todo[color=green]{Fact check this. Maybe just integrate the subsection into something else.}
 
 % alternatives like "Western Digital My Passport"...
 
-% Intel’s SSD 320 and 520 series
+% Intel's SSD 320 and 520 series
 
 \section{Inline encryption hardware}
 
-Compared to the previously described self-encrypting drives, inline encryption hardware is separated and independent from the disk. Inline encryption hardware is similar to classic crypto accelerators. However, inline encryption hardware, instead of using the same memory for input and output, optimizes the input-output process by writing and reading the data directly to and from the disk.
+Compared to the previously described self-encrypting drives, inline encryption hardware is separated and independent from the disk. Inline encryption hardware is similar to classic cryptographic accelerators. However, inline encryption hardware, instead of using the same memory for input and output data, optimises the input/output process by writing and reading the data directly to and from the disk.
 
 Inline encryption hardware shares several of SEDs advantages, such as reduced power consumption, reduced CPU usage, or increased performance, compared to purely software encryption.
 However, unlike SEDs, inline encryption devices usually do not have any access control or authentication capabilities. Instead, they allow one to simply insert a DEK into a key slot, select a key slot, and remove a DEK from a key slot. The data passing through the inline encryption device to the disk is then encrypted using the DEK from the selected key slot. Similarly, data passing from the disk are decrypted by the inline encryption hardware.
-Since key management is entirely in control of the host system, which has knowledge of the file system mapping, inline encryption can be used not only for block-level encryption but also for filesystem-level encryption.
+Since key management is entirely in control of the host system, which has knowledge of the file system mapping, inline encryption can be used not only for block-level encryption but also for filesystem-level encryption. But this flexibility has also the downside that the host needs to actively control the encryption.
 
-An example of inline encryption hardware standard is the Qualcomm Inline Crypto Engine~\cite{qualcomm_ice}\todo{\href{https://csrc.nist.gov/CSRC/media/projects/cryptographic-module-validation-program/documents/security-policies/140sp3124.pdf}{some nist document} or maybe \href{https://android.googlesource.com/kernel/msm.git/+/android-msm-bullhead-3.10-n-preview-1/Documentation/crypto/msm/msm_ice_driver.txt}{some android kernel source}} used by some Android devices.
+An example of inline encryption hardware standard is the Qualcomm Inline Crypto Engine~\cite{qualcomm_ice}\todo[color=green]{\href{https://csrc.nist.gov/CSRC/media/projects/cryptographic-module-validation-program/documents/security-policies/140sp3124.pdf}{some NIST document} or maybe \href{https://android.googlesource.com/kernel/msm.git/+/android-msm-bullhead-3.10-n-preview-1/Documentation/crypto/msm/msm_ice_driver.txt}{some android kernel source}} used by some Android devices.
 % , both currently supported by the Kernel engine
 
 % basically just allows the user to insert keys in and works as a "filter" of the input/output of disk.
 
-\todo{something about how it provides actually a way to check the encrypted content, right? Seems to be primarily in android , source? Find how much inline enc hardware there really is }
+\todo{something about how it actually provides a way to check the encrypted content, right? Seems to be primarily in android , source? Find how much inline enc hardware there really is }
 
-\section{Software disk encryption}
 
-As an alternative to hardware encryption, there exists software disk encryption. Compared to hardware disk encryption, software disk encryption does not require specialized hardware.
-However, even though specialized hardware is not required, performance is often improved using cryptographic coprocessors.
+\subsection{fscrypt}
 
-\todo{probably just a quick overview, ... maybe change the chapter to just "disk encryption"... or mention this just shortly at the start...}
+In the upstream Linux, there exists support for inline encryption. However, it is currently used only by the kernel space library \emph{fscrypt}.
+This library works on a filesystem level, which allows it to be more flexible compared to block device-level encryption, as it can limit the encryption to only some files. However, fscrypt does not encrypt all information of the files, and the metadata (excluding the filename) are left unencrypted.
 
-\subsection{Linux stack}
-
-There are several available software encryption libraries and subsystems in the Linux kernel. 
-In this section, we will mention only two of them, each representing a different approach to software encryption.
-
-\todo{rethink where to put this... maybe tools?}
-
-\paragraph{dm-crypt}
-
-The subsystem \emph{dm-crypt} works on the block device level. It can encrypt any data, including metadata or partition tables, but it does not offer precise control over what is encrypted, and the entire filesystem must be encrypted. 
-% Since it is a device mapper target, it also needs access to the block device.
-
-In order to control dm-crypt encryption, there exists a tool called cryptsetup, described in more detail later in chapter~\ref{chapter_tools}.
-
-\todo{I don't think that inline encryption is supported AFAIK, does not require any extra implementations on the side of drivers or file system or anything, right?}
-
-\paragraph{fscrypt}
-
-The kernel space library \emph{fscrypt} works on a filesystem level.
-It is more flexible compared to the block device level dm-crypt, as it can limit the encryption to only some files. However, fscrypt does not encrypt all information for that file, and the metadata (excluding the filename) are left unencrypted.
-
-Although fscrypt offers software encryption by default, inline encryption is also supported.
-The usage of inline encryption in fscrypt is described in more detail later in chapter~\ref{chapter_tools}.
-
+By default, fscrypt uses only software encryption. The steps to activating inline encryption are described in more detail late in chapter~\ref{chapter_tools}.
 There also exists a user space application with the same name\footnote{\url{https://github.com/google/fscrypt}}, that can be used to control encryption of file systems using kernel space fscrypt.
+
 
