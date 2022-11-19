@@ -90,10 +90,11 @@ Level 0 Discovery and Level 1 Discovery information are acquired easily, as they
 The Level 2 Discovery, on the other hand, is more complicated.
 \todo[color=green]{Level 2 is actually just tables 'AccessControl' and 'ACE'!!!!!, mention that we actually expand the meaning to cover all tablesf,,, just rerereread it. it says access to any table, but access control tables decide who can... i think}
 
-We would like to include not only the AccessControl and ACE table in this process but also other interesting tables, such as the TPerInfo table, containing information about the firmware version, or the SecretProtect table, containing information about the mechanism used to protect the DEKs. 
-Because of this, instead of the definition of Level 2 Discovery presented in section~\ref{section:opal_capability_discovery}, we will use a modified version.
-This modified version will try to include every table in the TPer.
-However, we have a few limiting factors that may limit the number of tables we will be able to read.
+% We would like to include not only the AccessControl and ACE table in this process but also other interesting tables, such as the TPerInfo table, containing information about the firmware version, or the SecretProtect table, containing information about the mechanism used to protect the DEKs. 
+% Because of this, instead of the definition of Level 2 Discovery presented in section~\ref{section:opal_capability_discovery}, we will use a modified version.
+% This modified version will try to include every table in the TPer.
+For Level 2 Discovery we would like to include as many tables as possible. The Opal standard defines the mandatory and optional  tables, yet we would like to include also any table that is vendor specific.
+We also have a few limiting factors that may limit the number of tables we will be able to read.
 First of all, we do not want to change the state of the device. This includes actions such as reverting the device to the manufactured state or taking ownership of it. Even if the state is potentially reversible without data loss, the risk of the disk not working correctly surpasses the potential gain from more information. This might 
 % ...e.g. tables of locking SP might be unavailable if it was not activated (but the SP will still be mentioned in the SP table of Admin SP).
 Another requirement is that no authorisation should be required. Instead, we will use the password-less Anybody authority. This again restricts the set of tables that are accessible. However, according to the definitions of access rights in the Opal standard~\cite{tcg-opal2}, this mainly affects secrets, such as passwords of Authorities or DEKs, and the current configuration of locking ranges, such as their start and length. Such information does not speak about the properties and capabilities of the device itself.

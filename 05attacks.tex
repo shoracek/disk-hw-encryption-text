@@ -40,15 +40,16 @@ Although physical security is the obvious solution, another approach is to let t
 
 
 An encrypted communication would be able to prevent the password from being sniffed by a probe between the disk and the host. For this purpose, the Core standard defines the secure messaging feature, which provides confidentiality of the communication.
-An authentication of the disk to the host would be able to prevent the replacement of the disk ...........
+An authentication of the disk to the host would be able to prevent the replacement of the disk. 
+The core standard introduces this feature through different types of authority operations, such as challenge and response.
+However, the Opal standard does not mandate secure messaging and the only authority operation it does mandate is password, and so it is unlikely that any Opal device would implement them.
 
 
+% An encrypted communication would allow preventing the password from being sniffed by a probe, and authentication of the disk to the host would prevent 
+% These features are defined in the Core standard under secure messaging and as a method of authentication, respectively. 
 
-An encrypted communication would allow preventing the password from being sniffed by a probe, and authentication of the disk to the host would prevent 
-These features are defined in the Core standard under secure messaging and as a method of authentication, respectively. However, the Opal standard does not mandate either of these features.
 
-
-opal does not mandate secure messaging, which would allow encrypted communication, which would also require cold boot attack to acquire the encryption key, to get access to current session. But secure messaging is relevant only to the management of the disk, not to the direct reading writing, so as long as the LR would be unlocked this would not help........\todo{.........}
+% opal does not mandate secure messaging, which would allow encrypted communication, which would also require cold boot attack to acquire the encryption key, to get access to current session. But secure messaging is relevant only to the management of the disk, not to the direct reading writing, so as long as the LR would be unlocked this would not help........\todo{.........}
 
 
 

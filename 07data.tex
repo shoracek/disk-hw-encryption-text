@@ -46,11 +46,46 @@ There are some noticeable differences: since the first part is reported through 
 Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.\todo{this is ocpypasted from the original... need to find what to write here...}
 
 
+output depends on wheter locking sp is activated ... on nwhat sp are activated in general
+
+something: we have found that none of th edisks we have tesed adheres to the standard completely.
 
 Ideas for comparison:
 \begin{enumerate}
     \item Encryption modes (done)
     \item Look for bad parameters \begin{enumerate}
-        \item asd
+        \item sdb reports size of tables as 0 (N)
+        \item sdb reports only one instance of base template (M, but VU, but still wrong!!)
+        \item sdb reports bad size of SP (N)
+        \item sdb reports bad size of tables in table table ( some M)
+        \item sdb ... size of tper protected area (N)
+        \item GUDID: \begin{itemize}
+\item sda     0x7850692b4 c4c038 28132f1d5 --- completely wrong???
+\item sdb     0x022300085 0026b7 784b01ace --- uses mac not company id (0026b7)
+\item sdc     0x022300085 000000 000000000 --- does not use anything...
+\item sdd     0x022300085 000000 000000000
+\item nvme0n1 0x022300085 000000 000000000
+        \end{itemize}
+        \item sdb does not specify  TPERInfo SSCs!
     \end{enumerate}
+    \item sdb also includes (N) columns
+    \item any differences? \begin{itemize}
+        \item extra feature sets
+        \item AlignmentGranularity, 
+        \item base comid
+        \item num of datastore tables
+        \item allows timeout
+        \item max packet size
+        \item max num of authentications
+        \item 
+    \end{itemize}
+    \item difference in response, some return empty set, other give not authorized
+    \item sdb is older opal standard, still has 0x0000020400000007 interface control
+    \item sdb uses types larger than requried
+
+    \item DataRemovalMechansim (M) nowhere in any of the disks --- disks probably <= 2.01
 \end{enumerate}
+
+todo test number of authorities in sda, theere is row only for admin1..
+
+

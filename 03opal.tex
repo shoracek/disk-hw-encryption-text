@@ -25,7 +25,7 @@ Each of these SSCs is focused on a different use case. These SSCs are namely: \b
     \item \emph{Opal SSC} is targeted at corporate and personal usage. As this is the most available subsystem, it will be the target of our focus and be described more closely in the rest of this chapter.
     \item \emph{Opalite SSC} is simplified Opal. Does not mandate features such as locking ranges, decreases the minimal number of admin and user authorities, or additional tables to store arbitrary data tables~\cite{tcg-opalite}. % smaller datastore also, i think
     \item \emph{Pyrite SSC} is encryption-less Opalite. However, it does not mandate encryption of data saved on disk and instead may offer only logical access control~\cite{tcg-pyrite}.
-    \item \emph{Ruby SSC} is focused on data centres and server drives. Ruby SSCs may provide only a single global locking range, a weaker configuration of access control, and no pre-boot authentication support~\cite{tcg-ruby}. Replacing the older Enterprise subsystem.
+    \item \emph{Ruby SSC} is focused on data centres and server drives. Ruby SSCs may provide only a single global locking range, a weaker configuration of access control, and no pre-boot authentication support~\cite{tcg-ruby}. Replacing the older Enterprise subsystem.\todo{optionally PSK?}
 \end{itemize}
 
 Other than the Core and SSC standards defining the fundamentals of the devices, there are defined also Feature Sets. These Feature Sets expand the standards with less fundamental features. Some of those are 
@@ -211,6 +211,16 @@ However, Opal does not mandate the support of secure messaging.
 
 In order to facilitate a safe execution of sequences of methods, the Core standard specifies transactions. Similarly to transactions in database systems, this feature enables one to revert the effects of a sequence of methods. This is done automatically in case the transaction is not finished or if the transaction is manually aborted. However, not all the effects of methods are rolled back, such as logs. Nested transactions are supported, in which case the transaction is committed when the outermost transaction is finished.
 
+\subsection{Possible limitations}
+
+Due to the range of possible values of the parameters, it is very likely that many features shown in this chapter might be unavailable in a specific device.
+For example, Opal specifies that the device must be able to handle at least one method per SubPacket, at least one SubPacket per Packet, and at least one Packet per ComPacket. This means that Opal-compliant do not necessarily need to be able to process multiple methods in one ComPacket.
+Opal also specifies that at least one active transaction per session, at least one active session per all the ComIDs, and at least one static ComID are supported, making only one active transaction at a time possible.
+Because of this, many of the structures meant to support features such as asynchronous communication only introduce unnecessary overhead.
+
+% This means that an Opal-compliant device implementing only the required minimum will also not be able to provide any
+
+
 % The Opal specifies mandatory minimums of number of supported transactions at one time. This minimum must be at least one, however this minimum allows a limit of one transaction at one time, which effectively means that support of transactions is optional.
 
 % For communication Opal requires only support of synchronous communication.
@@ -301,9 +311,9 @@ Opal standard~\cite{tcg-opal2} extends the states defined in the Core specificat
 
 \subsection{Taking ownership}
 
-\todo[color=green]{this doesn't really belong here, but where would i belong?, nah i think it's fine}
 
 In order to take ownership of an Opal drive, there are several approaches defined in the Opal standard~\cite{tcg-opal2}. The most frequent approach is for the device to store the default PIN of the SID\todo[color=green]{this is introduced later in access control chapter...., that chapter is before this now} authority, called MSID, in a table accessible without any credentials. This allows anyone to read the default PIN, authenticate themselves as the SID authority, and change the PIN. However, the process of taking ownership is not required in any way, and the drive will function as expected even if the PIN remains unchanged.
+\todo[color=green]{this doesn't really belong here, but where would i belong?, nah i think it's fine}
 
 % In order to take ownership of a TPer, the basic steps are:
 % 1. initialise a session with the Admin SP as the Anybody authority, 
@@ -314,6 +324,15 @@ In order to take ownership of an Opal drive, there are several approaches define
 % 6. finish session
 
 % however, note that the entire process of taking ownership is entirely optional and the device will work fine if it is skipped.
+
+\subsection{Feature sets}
+
+The system of authorities is further expanded upon by several feature sets.
+The following feature sets are mandated by the Opal standard.
+
+Physical Presence SID (PSID) is a special authority that is authorised to call only the Revert method. The PIN for this authority may not be found using the interface of the disk. Every one of our disks supplied this information on a label on the disk. This authority provides a way to reset the TPer into factory state even in case the SID PIN is lost~\cite{tcg-psid}.
+
+Block SID Authentication feature disables SID authority until the device is powered on again. One of the possible use cases is by BIOS to protect a drive with default MSID~\cite{tcg-block-sid-auth}.
 
 
 \section{Capability discovery}
@@ -522,7 +541,7 @@ Locking SP shared the Base Template and Opal-specific tables with Admin SP, but 
     \end{itemize}
     \item Non-template tables:
     \begin{itemize}
-        \item \emph{DataStore} byte table for storage of arbitrary data
+        \item \emph{DataStore} byte table for storage of arbitrary data~\cite{tcg-additional-datastore}.
     \end{itemize}
 \end{itemize}
 
@@ -564,8 +583,8 @@ When \verb|Enable| is true and \verb|Done| is false, the shadowing is active, an
 
 
 
-\section{Opal SSC}
-\todo{remove this, but the intro seems nice to have? maybe to introduction?}
+% \section{Opal SSC}
+% \todo{remove this, but the intro seems nice to have? maybe to introduction?}
 
 % Even though the Core specification introduces many powerful and interesting features, this might increase the cost of design and manufacturing of a fully compliant device. To solve this problem, the Opal SSC determines only a small set of mandatory features, leaving most of the features optional. Together with the set of mandatory features it also states range limits of certain properties.
 
@@ -580,25 +599,19 @@ When \verb|Enable| is true and \verb|Done| is false, the shadowing is active, an
 % Out of the previously mentioned SPs, Opal requires only that the Admin SP and the Locking SP are supported. 
 % Since SP issuance is not one of the mandatory features, the Locking SP may also be preconfigured by the manufacturer and be initially in the ``manufactured-inactive'' state. 
 
-Due to the range limits specified in the Opal SSC, the following features also might not be available.
-\begin{itemize}
-\item Opal specifies that the device must be able to handle: at least one method per SubPacket, at least one SubPacket per Packet, and at least one Packet per ComPacket. This means that any ...
-\item At least one active transaction per session, at least one active session per all the ComIDs and at least one ComID.
-\end{itemize}
-This means that an Opal-compliant device implementing only the required minimum will also not be able to provide any
 
-But Opal does not only reduce the feature set from the Core standard but also expands it with some extra feature sets. Even though the Core specification does not require the following feature sets, the Opal SSC requires them additionally.
+% But Opal does not only reduce the feature set from the Core standard but also expands it with some extra feature sets. Even though the Core specification does not require the following feature sets, the Opal SSC requires them additionally.
 
 % 2.10 Mandatory Feature Sets
 % An Opal SSC compliant SD SHALL support the following TCG Storage Feature Sets:
 % 1) Additional DataStore Tables, Opal SSC Feature Set (refer to [6]);
 % 2) PSID, Opal SSC Feature Set (refer to [6]).
-% 3) Block SID Authentication Feature Set (refer to [8])
-\begin{itemize}
-\item Physical Presence SID (PSID) is a special authority that is authorised to call only the Revert method. The PIN for this authority may not be found using the interface of the disk. Every one of our disks supplied this information on a label on the disk. This authority provides a way to reset the TPer into factory state even in case the SID PIN is lost~\cite{tcg-psid}.
-\item DataStore tables are byte tables accessible for any use. Using the Activate method, the number of the DataStore tables with their sizes can be specified~\cite{tcg-additional-datastore}.
-\item Block SID Authentication feature disables SID authority until the device is powered on again. One of the possible use cases is by BIOS to protect a drive with default MSID~\cite{tcg-block-sid-auth}.
-\end{itemize}
+% % 3) Block SID Authentication Feature Set (refer to [8])
+% \begin{itemize}
+% % \item Physical Presence SID (PSID) is a special authority that is authorised to call only the Revert method. The PIN for this authority may not be found using the interface of the disk. Every one of our disks supplied this information on a label on the disk. This authority provides a way to reset the TPer into factory state even in case the SID PIN is lost~\cite{tcg-psid}.
+% % \item DataStore tables are byte tables accessible for any use. Using the Activate method, the number of the DataStore tables with their sizes can be specified~\cite{tcg-additional-datastore}.
+% % \item Block SID Authentication feature disables SID authority until the device is powered on again. One of the possible use cases is by BIOS to protect a drive with default MSID~\cite{tcg-block-sid-auth}.
+% \end{itemize}
 
 
 
