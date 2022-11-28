@@ -10,9 +10,9 @@ We have used the \verb|discovery| utility to analyse SanDisk X300s, Kingston KC6
 
 \section{Support of additional features}
 
-Using the output from our \verb|discovery| utility, we can find out what non-mandatory features related the tested disks support.
+Using the output from our \verb|discovery| utility, we can find out what non-mandatory features the tested disks support.
 Such information might provide us, among others, with insight into how realistic it would be to prevent some of the attacks introduced in Chapter~\ref{chapter:security}, such as the evil maid attack, which could be partially prevented by secure messaging.
-In Table~\ref{table:compare_feature_sets} we can see which features related to the security the tested disks support.
+In Table~\ref{table:compare_feature_sets}, we can see which features related to the security the tested disks support.
 
 \begin{table}
 \small
@@ -31,6 +31,9 @@ Samsung 980     &                  & yes                      &                 
 \caption{Comparison of optional features related to security in disks}
 \label{table:compare_feature_sets}
 \end{table}
+
+
+
 
 We have also used the utility to compare the communication capabilities of the disks.
 Using the Level 2 Discovery information, we found out that none of the disks implemented any additional communication features described in Chapter~\ref{opal_communication}, such as support of ACK/NACK or asynchronous communication. The only difference between the disks related to their communication parameters is the largest size of a packet and the maximum number of simultaneous authentications in a session.
@@ -80,7 +83,6 @@ Samsung 980         & yes & yes &     & n/a & 2.01       \\
 \label{table:compare_versions}
 \end{table}
 
-
 As can be seen from Table~\ref{table:compare_versions}, none of the disks reports its minor version, required from the 2.02 version of the standard.
 Although Kingston KC600 might seem to be compatible with the 2.01 version, considering its features, it contains Interface Control Template. This template was deprecated in 2.01, so we will consider this disk to implement Opal~2.00.
 As the remainder of the disks have not implemented Interface Control Template, we will consider them to be implementing Opal~2.01.
@@ -100,8 +102,7 @@ What most of the tested disks got wrong is the GUDID. GUDID is supposed to be a 
 The SanDisk X300s reported an absolutely wrong value. A part of the GUDID is a few constant bytes, which in the case of this disk, were different.
 The three tested Samsung disks have reported empty values in place of any variable content, such as the Company ID or vendor-specific identifier.
 
-Interestingly, Kingston KC600 which reported wrong values in other columns, reported this column mostly correctly. The value it reported as the Company ID was registered only as their MAC address range.
-
+Interestingly, Kingston KC600, which reported wrong values in other columns, reported this column mostly correctly. The only discrepancy with the format was that the value reported as the Company ID was registered only as their MAC address range and not as the Company ID with the IEEE Registration Authority.
 
 
 % \begin{enumerate}

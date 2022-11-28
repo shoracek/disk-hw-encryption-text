@@ -84,7 +84,7 @@ An example of usage of the \verb|control| utility can be seen in the Figure~\ref
 \subsection{Disk properties discovery}
 \label{utility_discovery}
 
-The final front end, the \verb|discovery| utility provides information about the Opal disk.
+The final front end, the \verb|discovery| utility, provides information about the Opal disk.
 This utility provides, other than the Discovery information introduced in Section~\ref{section:opal_capability_discovery} also other useful information, such as the identify commands of the drive interfaces (Identify command for NVMe devices~\cite{nvme-express-base-specification} and IDENTIFY DEVICE command for ATA devices~\cite{acs-3}).
 Level 0 Discovery and Level 1 Discovery information are acquired easily, as they are defined as they may be acquired using a simple IF-RECV command with specific ComID % and Protocol ID 
 or using the Parameters method without any parameters, respectively.
@@ -94,7 +94,7 @@ The Level 2 Discovery, on the other hand, is more complicated.
 % We would like to include not only the AccessControl and ACE table in this process but also other interesting tables, such as the TPerInfo table, containing information about the firmware version, or the SecretProtect table, containing information about the mechanism used to protect the DEKs. 
 % Because of this, instead of the definition of Level 2 Discovery presented in section~\ref{section:opal_capability_discovery}, we will use a modified version.
 % This modified version will try to include every table in the TPer.
-For Level 2 Discovery we would like to include as many tables as possible. The Opal standard defines the mandatory and optional  tables, yet we would like to include also any table that is vendor specific.
+For Level 2 Discovery, we would like to include as many tables as possible. The Opal standard defines the mandatory and optional tables, yet we would like to include also any table that is vendor specific.
 We also have a few limiting factors that may limit the number of tables we will be able to read.
 First of all, we do not want to change the state of the device. This includes actions such as reverting the device to the manufactured state or taking ownership of it. Even if the state is potentially reversible without data loss, the risk of the disk not working correctly surpasses the potential gain from more information. This might notably affect the collection of information from the Locking SP if it is not activated
 % ...e.g. tables of locking SP might be unavailable if it was not activated (but the SP will still be mentioned in the SP table of Admin SP).
@@ -105,7 +105,7 @@ Firstly we iterate using the Next method over the SP table of the Admin SP to ge
 With the list of SPs, we now may successively iterate using the Next method over the SPs and, for every one of them, get a list of their tables from the Table table, the same way we did with the SP table. The Table table is again always accessible by the Anybody authority.
 We then go through the found tables and try to get a list of their rows using the Next method. If this succeeds, we can then use the Get method to get each row of the table. However, some of the tables do not implement the Next method. This means that if we want to get the information from the rows of such tables, we have to guess the UIDs of the rows. Since each table can have up to $2^{32}$ sparsely distributed rows, simply iterating over all possible values is out of the question. In those cases, we only guess that a row with the lowest possible UID might exist and try to read information from it.
 
-Even after finishing the crawling, there might still be some tables left that we have not found. Even though the Table table should identify the tables of the SP, from our experience it often did not contain all of them. To solve this issue, we have a list of tables which are described in the Opal standard~\cite{tcg-opal2} but were not found in the Table table of some of our tested disks. We then process these tables separately.
+Even after finishing the crawling, there might still be some tables left that we have not found. Even though the Table table should identify the tables of the SP, from our experience, it often did not contain all of them. To solve this issue, we have a list of tables which are described in the Opal standard~\cite{tcg-opal2} but were not found in the Table table of some of our tested disks. We then process these tables separately.
 
 During the process, we print the acquired information. We use the JSON format with SPs, tables and rows as dictionaries. The rows then contain the columns as keys and the cells as values. Since the cells can contain diverse types, we have decided to 
 parse only the outermost ones. This means that, for example, for lists, we print the inner bytes in hexadecimal form surrounded by square brackets.
@@ -147,7 +147,7 @@ parse only the outermost ones. This means that, for example, for lists, we print
     \label{fig:discovery_example}
 \end{figure}
 
-An example of part of the output of this process can be seen in Figure~\ref{fig:discovery_example}\todo{maybe use better example? where the common name is not used}. Depicted there is a part of the output of this utility, containing the start of the Table table first row. The nested structure with outermost key corresponding to the Admin SP, followed by keys for the Table table and the row of the Table table for the Table table\todo{wtf, maybe just choose a different row....., are the comments I added better?, add some text that te comments are not part of the output though...}, can be seen. % and the Anybody ACE.
+An example of part of the output of this process can be seen in Figure~\ref{fig:discovery_example}\todo{maybe use better example? where the common name is not used}. Depicted there is a part of the output of this utility containing the start of the Table table's first row. The nested structure with the outermost key corresponding to the Admin SP, followed by keys for the Table table and the row of the Table table for the Table table\todo{wtf, maybe just choose a different row....., are the comments I added better?, add some text that te comments are not part of the output though...}, can be seen. % and the Anybody ACE.
 \todo{reword so that the figure is inline... looks nicer :)}
 % something about how we don't translate the types during printing ...
 

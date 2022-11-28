@@ -57,24 +57,31 @@
     advisor     = {Ing. Milan Brož, Ph.D.},
     title       = {Hardware-encrypted disks in Linux},
     TeXtitle    = {Hardware-encrypted disks in Linux},
-    keywords    = {disk encryption, self-encrypting disk, ...},
+    keywords    = {disk encryption, self-encrypting drive, Linux, storage security},
     % TeXkeywords = {keyword1, keyword2, \ldots},
     abstract    = {%
-The thesis aims to analyze existing approaches to using hardware-encrypted block devices (disks) in Linux.
 
-The implementation part should provide basic low-level tools for tools configuration and status check of such devices. Tools should use generic Linux kernel interfaces (like ioctl calls).
+% The eXpress Data Path is still a quite young technology, and as such, its testing environment may prove insufficient. Existing test suites may require duplicated code, and yet be too specific to cover multiple use cases.
+% This work introduces test suite, with a test harness providing functionality to solve this problem and several test cases testing the basic capabilities of the eXpress Data Path.
 
-Student should \begin{itemize}
-    \item get familiar with and study available resources for self-encrypted drives, OPAL2 standard, block layer inline encryption,
-    \item analyze and describe security of such drives,
-    \item provide state-of-the-art overview of existing attacks,
-    \item implement proof-of-concept low-level tools to access available devices,
-    \item evaluate and discuss the result.
-\end{itemize}
+As disk encryption becomes a standard part of the security of many devices, many look towards solutions which might improve the performance, efficiency or security of the process. Such a solution can be seen in hardware disk encryption. However, hardware disk encryption is not without its flaws.
+This work looks at the security of such technologies, focusing on the popular Opal standard. In order to be able to understand the problematics more deeply, this work also implements a set of tools to manage and analyse Opal devices.
+    
+% The thesis aims to analyze existing approaches to using hardware-encrypted block devices (disks) in Linux.
 
-The student should be familiar with C code for low-level system programming and cryptography concepts.
+% The implementation part should provide basic low-level tools for tools configuration and status check of such devices. Tools should use generic Linux kernel interfaces (like ioctl calls).
 
-TODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODO\todo{change me }
+% Student should \begin{itemize}
+%     \item get familiar with and study available resources for self-encrypted drives, OPAL2 standard, block layer inline encryption,
+%     \item analyze and describe security of such drives,
+%     \item provide state-of-the-art overview of existing attacks,
+%     \item implement proof-of-concept low-level tools to access available devices,
+%     \item evaluate and discuss the result.
+% \end{itemize}
+
+% The student should be familiar with C code for low-level system programming and cryptography concepts.
+
+% TODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODOTODO TODO\todo{change me }
 
     },
     % thanks      = {%
