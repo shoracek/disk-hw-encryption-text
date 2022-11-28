@@ -1,9 +1,9 @@
 \chapter{TCG Opal 2.0}
 \label{chapter_opal}
 
-TCG Opal Security Subsystem Class 2.0 (hereinafter referred to simply as ``Opal standard'') is a specification for storage devices, aiming to provide confidentiality of stored data while the conforming disk is powered off~\cite{tcg-opal2}. It is one of the representatives of the self-encrypting drive approach to hardware disk encryption, and as a prominent standard for hardware disk encryption for personal computers, we will focus primarily on it in the rest of this thesis.
+\emph{TCG Opal Security Subsystem Class 2.0} (hereinafter referred to simply as ``Opal standard'') is a specification for storage devices, aiming to provide confidentiality of stored data while the conforming disk is powered off~\cite{tcg-opal2}. It is one of the representatives of the self-encrypting drive approach to hardware disk encryption, and as a prominent standard for hardware disk encryption for personal computers, we will focus primarily on it in the rest of this thesis.
 % Developed in 2012 by Trusted Computing Group (TCG) as a successor of Opal 1.0.
-Information for this chapter comes primarily from the Core standard~\cite{tcg-storage-core} and the Opal standard~\cite{tcg-opal2}.
+Information for this chapter comes primarily from the Core standard~\cite{tcg-storage-core}, defined later, and the Opal standard~\cite{tcg-opal2}.
 
 Opal offers several features to help with securing data on the disk.
 Some of those features are locking ranges, allowing to deny access to only part of the disk, authorities, allowing to specify a set of capabilities to credentials, or shadow MBR, to allow pre-boot authentication even with a fully encrypted disk. Together with the architecture, protocols, and many different properties, the standard can get very complex and yet its understanding is fundamental for any elementary work with devices implementing it.
@@ -18,7 +18,7 @@ In this chapter, we are planning to introduce these features together with the c
 
 \section{Structure of the standard}
 
-The Opal standard is defined as a subsystem extending the TCG Storage Architecture Core Specification~\cite{tcg-storage-core} (in the future referred to simply as ``Core standard''). 
+The Opal standard is defined as a subsystem extending the \emph{TCG Storage Architecture Core Specification}~\cite{tcg-storage-core} (in the future referred to simply as ``Core standard''). 
 The Core specification introduces many powerful and interesting features. However, this might increase the cost of the design and manufacturing of a fully compliant device. In order to solve this problem, there are defined several different Security Subsystem Classes~(SSC), determining only a small set of mandatory features, leaving most of the features optional. Together with the set of mandatory features, SSCs also state the limits of certain properties or may specify additional features.
 % The Core standard specifies the core features and properties shared among several different types of storage Security Subsystem Classes (SSC) that extend the core functionality by specifying additional features or defining the set of mandatory features.
 Each of these SSCs is focused on a different use case. These SSCs are namely: \begin{itemize}
@@ -38,7 +38,7 @@ the PSK Secure Messaging~\cite{tcg-psk-secure-messaging}, providing secure commu
 the PSID~\cite{tcg-psid}, defining a way to reset the device into the manufactured state,
 or the Single User Mode~\cite{tcg-sum}.
 However, we will focus primarily on those that are mandatory in the Opal specification.
-Finally, there are also other expanding standards, such as the TCG Storage Interface Interactions Specification (SIIS)~\cite{tcg-siis}, describing the mapping of secure commands used by TCG devices to commands of specific disk interfaces and reset types, or \cite{tcg-secure-messaging-addendum}, describing TLS-based secure communication between the host and the device.
+Finally, there are also other expanding standards, such as the Storage Interface Interactions Specification (SIIS)~\cite{tcg-siis}, describing the mapping of secure commands used by TCG devices to commands of specific disk interfaces and reset types, or the Secure Messaging addendum~\cite{tcg-secure-messaging-addendum}, describing TLS-based secure communication between the host and the device.
 
 \section{Architecture}
 
@@ -65,19 +65,19 @@ Finally, there are also other expanding standards, such as the TCG Storage Inter
 %     \label{fig:architecture}
 % \end{figure}
 
-The Core standard~\cite{tcg-storage-core} splits the storage device implementing it into two parts: the trusted peripheral and security providers.
+The Core standard~\cite{tcg-storage-core} splits the storage device implementing it into two parts: the Trusted Peripheral and Security Providers.
 
 \todo[color=green]{maybe just mix into another section.... maybe nah}
 
-A trusted peripheral (TPer) is a component located on the disk that provides the security of the data on the disk. 
+A \emph{Trusted Peripheral} (TPer) is a component located on the disk that provides the security of the data on the disk. 
 TPer mediates the communication between its Security Providers and the host.
 In order to maintain the state of the device, tables are used.
 There are two types of tables: byte tables, consisting of raw bytes, and object tables, with defined columns and rows, called objects.
 Each template defines its tables, such as the key tables containing DEKs, or the meta table called the Table table, which contains information about all the other tables in the SP.
 Although the Core standard specifies a way to create new tables or delete existing ones, this feature is not required by the Opal standard.
 
-Security Provider (SP) is defined as a set of tables, methods and access control. SPs are derived from a set of templates, which define a set of tables and methods aimed at one functionality, a subset of which the SP implements. The templates are described more closely in a later section \ref{templates}.
-The Opal 2.0 standard defines that at least the Admin SP and Locking SP must be present in the TPer. The Admin SP is tasked with administrating the TPer and other SPs, which may include creating new SPs, deleting existing SPs, or providing information about SPs. The Locking SP provides access to functionality such as managing locking ranges, locking the drive, or managing access control. Both of these SPs are described more closely in later sections \ref{admin_sp} and \ref{locking_sp}.
+\emph{Security Provider} (SP) is defined as a set of tables, methods and access control. SPs are derived from a set of templates, which define a set of tables and methods aimed at one functionality, a subset of which the SP implements. The templates are described more closely in a later Section~\ref{templates}.
+The Opal 2.0 standard defines that at least the Admin SP and Locking SP must be present in the TPer. The Admin SP is tasked with administrating the TPer and other SPs, which may include creating new SPs, deleting existing SPs, or providing information about SPs. The Locking SP provides access to functionality such as managing locking ranges, locking the drive, or managing access control. Both of these SPs are described more closely in later Section~\ref{admin_sp} and Section~\ref{locking_sp}.
 
 
 
@@ -103,7 +103,7 @@ The final layer is the Session layer. At this layer, the session is already esta
 \subsection{ComID}
 \label{subsection:comid}
 
-One of the information required in order to send a command is the ComID, a number identifying the caller (e.g. application of the host). It ensures that responses to method calls will be received by the correct application since there can be at one time multiple callers. 
+One of the information required in order to send a command is the \emph{ComID}, a number identifying the caller (e.g. application of the host). It ensures that responses to method calls will be received by the correct application since there can be at one time multiple callers. 
 There are three types of ComIDs: statically allocated ComID, dynamically allocated ComID and special ComIDs.
 Statically allocated ComID can be acquired through the Level 0 Discovery process, described in Section~\ref{section:opal_capability_discovery}. The Discovery process simply informs about the base ComID number and the number of static ComIDs.
 Dynamically allocated ComID can be acquired using the \verb|GET_COMID| command.
@@ -321,9 +321,9 @@ Because of this, many of the structures meant to support features such as asynch
 \section{Access Control}
 \label{section:access_control}
 
-In order to provide access to methods only to authorised actors, the standard also defines access control. The access control provides a way to allow access to methods of the SP only after the knowledge of a secret has been proved. Information required to verify knowledge of the secret is called a credential and is stored in one of the corresponding SP's credentials tables. Each SP may contain several credential tables, one for each type of credential, such as a password,  an RSA key pair, or an AES key.
+In order to provide access to methods only to authorised actors, the standard also defines access control. The access control provides a way to allow access to methods of the SP only after the knowledge of a secret has been proved. Information required to verify knowledge of the secret is called a credential and is stored in one of the corresponding SP's credentials tables. Each SP may contain several credential tables, one for each type of credential, such as a password, an RSA key pair, or an AES key.
 
-In order to support the authentication of different users or require multiple users at once, access control rules are defined using Access Control Lists (ACL) containing Access Control Elements (ACE). ACEs are Boolean expressions with inputs being authentication of authorities.
+In order to support the authentication of different users or require multiple users at once, access control rules are defined using \emph{Access Control Lists} (ACL) containing \emph{Access Control Elements} (ACE). ACEs are Boolean expressions with inputs being authentication of authorities.
 % Each entry in an ACL has an owner and so it is possible to divide the .
 
 Each combination of method and object has a defined ACL, which needs to be satisfied in order for the method to be invoked on the object. An ACL is satisfied once one of the ACEs contained within it is satisfied, where authenticated authority variables evaluate as true.
@@ -478,7 +478,7 @@ Other than the defined properties, the Level 1 Discovery process may also report
 
 \subsection{Level 2 Discovery}
 
-Level 2 Discovery is the act of reading a table using the Get method of an SP. This includes reading any table, such as the access control table or table of locking ranges. Some of the SPs' important tables are described in later subsections \ref{admin_sp_tables} and \ref{locking_sp_tables}.
+Level 2 Discovery is the act of reading a table using the Get method of an SP. This includes reading any table, such as the access control table or table of locking ranges. Some of the SPs' important tables are described in later Subsection~\ref{admin_sp_tables} and Subsection~\ref{locking_sp_tables}.
 
 
 \section{Templates}
@@ -634,7 +634,7 @@ Locking SP shared the Base Template and Opal-specific tables with Admin SP, but 
 \subsection{Locking range}
 \label{locking_range}
 
-The locking range (LR) feature gives the user a way to specify an LBA range on the disk that can be locked independently on the rest of the disk. Each locking range also has its own ACE to control who can lock and unlock the range. Because each LR is also encrypted using its own DEK, it is possible to re-generate a new DEK for a single LR, discarding data of only one LR.
+The \emph{locking range} (LR) feature gives the user a way to specify an LBA range on the disk that can be locked independently on the rest of the disk. Each locking range also has its own ACE to control who can lock and unlock the range. Because each LR is also encrypted using its own DEK, it is possible to re-generate a new DEK for a single LR, discarding data of only one LR.
 
 
 There also always exists a special range called the global locking range that covers any area on the disk that is not already covered by a regular locking range.
@@ -648,7 +648,7 @@ For Opal devices, reset Power Cycle must always be selected, and Programmatic re
 \subsection{Single User Mode}
 
 In many cases, it might be desirable to prevent admins from accessing user data, even though the admins generally have more competence. 
-The Single User Mode Feature Set~\cite{tcg-sum} defines a way to achieve this.
+The Single User Mode Feature Set~\cite{tcg-sum} defines a way to achieve this using a \emph{Single User Mode}.
 After activating Single User Mode, only a single User authority is capable of changing their authority object (this includes changing their PIN), changing the proprieties of LRs assigned to them (which includes the lock state of the LR) and generating new keys for those LRs.
 The only actions available to the Admin authorities related to that LR are destructive actions.
 
@@ -773,7 +773,7 @@ However, using the SCSI \verb|SG_IO| ioctl request with its \verb|sg_io_hdr_t| s
 
 % or \verb|NVME_IOCTL_ADMIN_CMD| ioctl and \verb|nvme_admin_cmd| structure for NVMe disks. 
 
-Using these structures, the Opal commands described in section \ref{opal_communication} can be sent to the TPer. Compared to the Opal ioctl requests, this has the advantage of not being limited only to a subset of features that the Opal ioctl requests implement and instead being able to use every Opal feature the device offers. % This is not limited only to \dots (e.g. improve performance by using optional features such as concurrency, etc, described earlier) \dots
+Using these structures, the Opal commands described in Section~\ref{opal_communication} can be sent to the TPer. Compared to the Opal ioctl requests, this has the advantage of not being limited only to a subset of features that the Opal ioctl requests implement and instead being able to use every Opal feature the device offers. % This is not limited only to \dots (e.g. improve performance by using optional features such as concurrency, etc, described earlier) \dots
 
 Although this approach gives the host application access to every feature of the Opal disk, it also requires it not only to implement the command hand-over for each type of disk separately but also to create the methods and parse the method results, both described in the Chapter~\ref{opal_communication}, on their own.
 
