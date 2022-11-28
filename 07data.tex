@@ -1,91 +1,224 @@
 \chapter{Data collection}
+\label{chapter:data}
 
-To get an idea how much of the Opal standard is implemented by disks
+In order to be able to compare a large number of different Opal disks, we have decided to use our \verb|discovery| utility. 
+Data collected using this utility allows us to compare the capabilities and parameters reported by the disks easily. 
+The fact that the utility is designed to not change the state of the analysed device means that we will be able to use community in order to expand our data set without having to inconvenience users collecting the data by erasing their data or activating the Locking SP of their disk and causing possible future issues with unexpected issues if they would use other Opal-managing tools in the future.
 
-and what do they implement other than the mandatory basics required by the Opal standard
-
-In order to be able to compare a large number of disks and their Opal capabilities, 
-
-so that we can compare their capabilities, 
-
-For this purpose, we have collected a limited amount 
-
-For these reasons we will use our \verb|discovery| utility, introduced in the subsection~\ref{utility_discovery}.
-
-The raw collected data can be found in the appendix/attachments???, in this chapter we will focus only on the interesting excerpts ...
-
-As our \verb|discovery| utility collects data without permanently affecting the device, we were able to 
-
-since the data discovered using the utility are generated in a format like JSON with many utilities to parse it , we can use some of those already existing utilities to compare the properties of multiple disks...
-
-Selection of some of the more interesting properties can be seen in table~\ref{fig:properties_table}. 
-
-the values were edited to be more readable.
+We have used the \verb|discovery| utility to analyse SanDisk X300s, Kingston KC600, Samsung SSD 850 PRO, Samsung SSD 860 EVO and Samsung SSD 980 disks. The complete output can be found in the attachments.
 
 
+\section{Support of additional features}
 
-From our experience with Opal disks, most of them did not implement more than the required minimum\todo{TODO: fact recheck later on}. Some of the tested disks, even though they were described by the vendor and/or manufacturer as Opal-compliant, did not implement every required feature set. Out of the 6 tested disks, only 2 implemented the required Block SID Authentication feature set. However, even those 2 implementing the feature set did not support the actual feature.
+Using the output from our \verb|discovery| utility, we can find out what non-mandatory features related the tested disks support.
+Such information might provide us, among others, with insight into how realistic it would be to prevent some of the attacks introduced in chapter~\ref{chapter:security}, such as the evil maid attack, which could be partially prevented by secure messaging.
+In~Table \ref{table:compare_feature_sets} we can see which features related to the security the tested disks support.
 
-
-
-\begin{table}[]
-    \centering
-    \begin{tabular}{|l|l|l|}
-        \hline
-                            & K\_AES\_128.Mode & K\_AES\_256.Mode \\ \hline
-        SanDisk X300s       &                  & CBC              \\ \hline
-        Kingston KC600      & XTS              & XTS              \\ \hline
-        Samsung SSD 850 PRO &                  & XTS              \\ \hline
-    \end{tabular}
-    \caption{Comparison of selected disk properties}
-    \label{fig:properties_table}
+\begin{table}
+\small
+\begin{tabularx}{\textwidth}{lXXXX}
+\toprule
+Disk model      & Single User & Block SID        & Secure  \\ 
+                & Mode        & Authentication   & Messaging \\ 
+\midrule
+SanDisk X300s   & yes              &                          &                   \\
+Kingston KC600  & yes              & yes                      &                   \\
+Samsung 850 PRO & yes              &                          &                   \\
+Samsung 860 EVO &                  &                          &                   \\
+Samsung 980     &                  & yes                      &                  \\ 
+\bottomrule
+\end{tabularx}
+\caption{Comparison of optional features related to security in disks}
+\label{table:compare_feature_sets}
 \end{table}
 
-The first part of the table contains values acquired through the level 0 discovery, the second part (starting with \verb|MaxComPacketSize|) contains values obtained through the level 2 discovery. In case the disk did not report a value, empty cell is used.
-There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
-Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.\todo{this is ocpypasted from the original... need to find what to write here...}
+We have also used the utility to compare the communication capabilities of the disks.
+Using the Level 2 Discovery information, we found out that none of the disks implemented any additional communication features described in chapter~\ref{opal_communication}, such as support of ACK/NACK or asynchronous communication. The only difference between the disks related to their communication parameters is the largest size of a packet and the maximum number of simultaneous authentications in a session.
+Otherwise, the parameters are kept at a minimum, with a maximum of one open session at once or one method per packet.
+
+After an analysis of the properties acquired from the tested disks, we can summarise that the disks more or less did the minimum mandated by the standard. 
+The absence of support for secure messaging, although not surprising due to the potential difficulty of implementation, is disheartening due to its possible use in securing the device.
 
 
-output depends on wheter locking sp is activated ... on nwhat sp are activated in general
 
-something: we have found that none of th edisks we have tesed adheres to the standard completely.
+\section{Minor versions of Opal}
 
-Ideas for comparison:
-\begin{enumerate}
-    \item Encryption modes (done)
-    \item Look for bad parameters \begin{enumerate}
-        \item sdb reports size of tables as 0 (N)
-        \item sdb reports only one instance of base template (M, but VU, but still wrong!!)
-        \item sdb reports bad size of SP (N)
-        \item sdb reports bad size of tables in table table ( some M)
-        \item sdb ... size of tper protected area (N)
-        \item GUDID: \begin{itemize}
-\item sda     0x7850692b4 c4c038 28132f1d5 --- completely wrong???
-\item sdb     0x022300085 0026b7 784b01ace --- uses mac not company id (0026b7)
-\item sdc     0x022300085 000000 000000000 --- does not use anything...
-\item sdd     0x022300085 000000 000000000
-\item nvme0n1 0x022300085 000000 000000000
-        \end{itemize}
-        \item sdb does not specify  TPERInfo SSCs!
-    \end{enumerate}
-    \item sdb also includes (N) columns
-    \item any differences? \begin{itemize}
-        \item extra feature sets
-        \item AlignmentGranularity, 
-        \item base comid
-        \item num of datastore tables
-        \item allows timeout
-        \item max packet size
-        \item max num of authentications
-        \item 
-    \end{itemize}
-    \item difference in response, some return empty set, other give not authorized
-    \item sdb is older opal standard, still has 0x0000020400000007 interface control
-    \item sdb uses types larger than requried
+If we want to compare the information provided by \verb|discovery| utility with the requirements mandated by the standard, we must first establish which iteration of the standard we should use.
 
-    \item DataRemovalMechansim (M) nowhere in any of the disks --- disks probably <= 2.01
-\end{enumerate}
-
-todo test number of authorities in sda, theere is row only for admin1..
+The newest version of the Opal standard is Opal 2.02~\cite{tcg-opal2}. During the three minor versions, Opal underwent several changes. 
+Some of the more noticeable changes are the additional mandatory Feature Sets. The PSID Feature Set was introduced as mandatory in version 2.01 and the Block SID Feature Set in version 2.02. Another significant change is the removal of the Interface Control Template. This template was removed in version 2.01 and was meant to function as a wrapper around vendor-specific drive features, such as upgrading firmware.
+The newest Opal 2.02 also introduced reporting of the minor version in the Opal SSC V2 Feature Descriptor. Since this change was introduced only in the 2.02 version of the standard, the two previous versions are not easily indistinguishable. In order to infer which version was used in the earlier versions, we will use the presence of the Interface Control Template and the earlier-mentioned feature sets. However, it should be noted that the presence of any of those features is not definitive proof of the version, as even if they are not mandatory, they can still be optional.
 
 
+% \begin{table}[]
+% \begin{tabular}{|l|l|l|l|l|}
+% \hline
+%                     & \begin{tabular}[c]{@{}l@{}}Opal SSC \\ V1.00\end{tabular} & \begin{tabular}[c]{@{}l@{}}Single User\\ Mode\end{tabular} & \begin{tabular}[c]{@{}l@{}}Opal SSC\\ V2.00\end{tabular} & \begin{tabular}[c]{@{}l@{}}Block SID \\ Authentication\end{tabular} \\ \hline
+% SanDisk X300s       &                                                           & yes                                                        & yes                                                      &                                                                     \\ \hline
+% Kingston KC600      &                                                           & yes                                                        & yes                                                      & yes                                                                 \\ \hline
+% Samsung 850 PRO & yes                                                       & yes                                                        & yes                                                      &                                                                     \\ \hline
+% Samsung 860 EVO &                                                           &                                                            &                          yes                                &                                                                     \\ \hline
+% Samsung 980     &                                                           &                                                            & yes                                                      & yes                                                                 \\ \hline
+% \end{tabular}
+% \caption{Comparison of versioning parameters}
+% \end{table}\todo{make narrower}
+
+\begin{table}
+\small
+\begin{tabularx}{\textwidth}{lXXXXX}
+\toprule
+  Disk model & PSID & Block SID & Interface Control & Reported minor version & Assumed version \\
+\midrule
+SanDisk X300s       & yes &     &     & n/a & 2.01       \\
+Kingston KC600      & yes & yes & yes & n/a & 2.00       \\
+Samsung 850 PRO     & yes &     &     & n/a & 2.01       \\
+Samsung 860 EVO     & yes &     &     & n/a & 2.01       \\
+Samsung 980         & yes & yes &     & n/a & 2.01       \\ 
+\bottomrule
+\end{tabularx}
+\caption{Comparison of attributes relevant to the version}
+\label{table:compare_versions}
+\end{table}
+
+
+As can be seen from Table~\ref{table:compare_versions}, none of the disks reports its minor version, required from the 2.02 version of the standard.
+Although Kingston KC600 might seem to be compatible with the 2.01 version, considering its features, it contains Interface Control Template. This template was deprecated in 2.01, so we will consider this disk to implement Opal~2.00.
+As the remainder of the disks have not implemented Interface Control Template, we will consider them to be implementing Opal~2.01.
+
+\section{Inaccurate information}
+
+Other than the reported capabilities of the disks, we inspected also focused on incorrectly reported properties and compared the values reported by the disks to the values, value ranges, and formats described in the corresponding version of the Opal standard. 
+
+The disk we found had the highest amount of reported information that does not match the values required by the standard is the Kingston KC600. 
+Even though this disk is the only one that reported many additional columns which are not required, most of the incorrect information is located within these not required columns.
+The Core standard defines not required features may be implemented and do not need to be tested.
+Some of such incorrect information is the sizes of tables or the size of the protected storage area, both being reported as always empty.
+However, the incorrect information being reported by this disk is not limited solely to not required columns. One of the mandatory columns being reported incorrectly is the number of instances of the Base Template, which is reported as one despite the fact that there are two SPs, each with its own instance. 
+In some cases, the reported values are not incorrect semantically but syntactically. For example, the same Kingston KC600 disk reports its supported SSCs as bytes, although the format defined by the standard is a list of bytes.
+
+What most of the tested disks got wrong is the GUDID. GUDID is supposed to be a unique serial number of the disk corresponding to the NAA IEEE Registered format~\cite{spc-4}.
+The SanDisk X300s reported an absolutely wrong value. A part of the GUDID is a few constant bytes, which in the case of this disk, were different.
+The three tested Samsung disks have reported empty values in place of any variable content, such as the Company ID or vendor-specific identifier.
+
+Interestingly, Kingston KC600 which reported wrong values in other columns, reported this column mostly correctly. The value it reported as the Company ID was registered only as their MAC address range.
+
+
+
+% \begin{enumerate}
+%     \item sdb reports size of tables as 0 (N)
+%     \item sdb reports only one instance of base template (M, but VU, but still wrong!!)
+%     \item sdb reports bad size of SP (N)
+%     \item sdb reports bad size of tables in table table ( some M)
+%     \item sdb ... size of tper protected area (N)
+%     \item GUDID: \begin{itemize}
+%         \item sda     0x7850692b4 c4c038 28132f1d5 --- completely wrong???
+%         \item sdb     0x022300085 0026b7 784b01ace --- uses mac not company id (0026b7)
+%         \item sdc     0x022300085 000000 000000000 --- does not use anything...
+%         \item sdd     0x022300085 000000 000000000
+%         \item nvme0n1 0x022300085 000000 000000000
+%     \end{itemize}
+%     \item sdb does not specify  TPERInfo SSCs!
+% \end{enumerate}
+
+
+% We want to be able to use the information obtained this way primarily to compare capabilities and parameters reported by the disks.
+
+% To get an idea how much of the Opal standard is implemented by disks
+
+% and what do they implement other than the mandatory basics required by the Opal standard
+
+% In order to be able to compare a large number of disks and their Opal capabilities, 
+
+% so that we can compare their capabilities, 
+
+% For this purpose, we have collected a limited amount 
+
+% For these reasons we will use our \verb|discovery| utility, introduced in the Subsection~\ref{utility_discovery}.
+
+% The raw collected data can be found in the appendix/attachments???, in this chapter we will focus only on the interesting excerpts ...
+
+% As our \verb|discovery| utility collects data without permanently affecting the device, we were able to 
+
+% since the data discovered using the utility are generated in a format like JSON with many utilities to parse it , we can use some of those already existing utilities to compare the properties of multiple disks...
+
+% Selection of some of the more interesting properties can be seen in table~\ref{fig:properties_table}. 
+
+% the values were edited to be more readable.
+
+
+
+% From our experience with Opal disks, most of them did not implement more than the required minimum\todo{TODO: fact recheck later on}. Some of the tested disks, even though they were described by the vendor and/or manufacturer as Opal-compliant, did not implement every required feature set. Out of the 6 tested disks, only 2 implemented the required Block SID Authentication feature set. However, even those 2 implementing the feature set did not support the actual feature.
+
+
+
+% \newpage
+% \hrule
+
+% \begin{table}[]
+%     \centering
+%     \small
+% \begin{tabularx}{\textwidth}{lXX}
+%     \toprule
+%         Disk model          & AES-128 mode & AES-256 mode \\
+%         \midrule
+%         SanDisk X300s       &                  & CBC              \\
+%         Kingston KC600      & XTS              & XTS              \\
+%         Samsung 850 PRO     &                  & XTS              \\
+%         Samsung 860 EVO     &                  & XTS              \\
+%         Samsung 980         &                  & XTS              \\
+%         \bottomrule
+%     \end{tabularx}
+%     \caption{Comparison of selected disk properties}
+%     \label{fig:properties_table}
+% \end{table}
+
+
+
+% The first part of the table contains values acquired through the level 0 discovery, the second part (starting with \verb|MaxComPacketSize|) contains values obtained through the level 2 discovery. In case the disk did not report a value, empty cell is used.
+% There are some noticeable differences: since the first part is reported through firmly established C headers with static form, the numbers are parsed directly as C integers... the second part uses the TCG Storage protocol, with tokens that can be of different sizes --- notably in \verb|/dev/sdb| which returns numbers encoded with 4 bytes, even when not necessary.
+% Values of some variables are dependent on each other. For example, because \verb|MaxPackets| is always the minimum (1), then $\verb|MaxPacketSize| = \verb|MaxComPacketSize| - ($fixed size of \verb|MaxComPacketSize| header$)$.\todo{this is ocpypasted from the original... need to find what to write here...}
+
+
+% output depends on wheter locking sp is activated ... on nwhat sp are activated in general
+
+% something: we have found that none of th edisks we have tesed adheres to the standard completely.
+
+% Ideas for comparison:
+% \begin{enumerate}
+%     \item Encryption modes (done)
+%     \item Look for bad parameters \begin{enumerate}
+%         \item sdb reports size of tables as 0 (N)
+%         \item sdb reports only one instance of base template (M, but VU, but still wrong!!)
+%         \item sdb reports bad size of SP (N)
+%         \item sdb reports bad size of tables in table table ( some M)
+%         \item sdb ... size of tper protected area (N)
+%         \item GUDID: \begin{itemize}
+% \item sda     0x7850692b4 c4c038 28132f1d5 --- completely wrong???
+% \item sdb     0x022300085 0026b7 784b01ace --- uses mac not company id (0026b7)
+% \item sdc     0x022300085 000000 000000000 --- does not use anything...
+% \item sdd     0x022300085 000000 000000000
+% \item nvme0n1 0x022300085 000000 000000000
+%         \end{itemize}
+%         \item sdb does not specify  TPERInfo SSCs!
+%     \end{enumerate}
+%     \item sdb also includes (N) columns
+%     \item any differences? \begin{itemize}
+%         \item extra feature sets
+%         \item AlignmentGranularity, 
+%         \item base comid
+%         \item num of datastore tables
+%         \item allows timeout
+%         \item max packet size
+%         \item max num of authentications
+%         \item 
+%     \end{itemize}
+%     \item difference in response, some return empty set, other give not authorized
+%     \item sdb is older opal standard, still has 0x0000020400000007 interface control
+%     \item sdb uses types larger than requried
+
+%     \item DataRemovalMechansim (M) nowhere in any of the disks --- disks probably <= 2.01
+% \end{enumerate}
+
+% todo test number of authorities in sda, theere is row only for admin1..
+
+% ... sdb accepts anything as reset\_type but ignores it even if it is valid (M) value .

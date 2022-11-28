@@ -1,18 +1,18 @@
 \chapter{TCG Opal 2.0}
 \label{chapter_opal}
 
-TCG Opal Security Subsystem Class 2.0 (hereinafter referred to simply as ``Opal standard'') is a specification for storage devices, aiming to provide confidentiality of stored data while the conforming disk is powered off~\cite{tcg-opal2}. It is one of the representatives of the self-encrypting drive approach to hardware disk encryption. 
+TCG Opal Security Subsystem Class 2.0 (hereinafter referred to simply as ``Opal standard'') is a specification for storage devices, aiming to provide confidentiality of stored data while the conforming disk is powered off~\cite{tcg-opal2}. It is one of the representatives of the self-encrypting drive approach to hardware disk encryption, and as a prominent standard for hardware disk encryption for personal computers, we will focus primarily on it in the rest of this thesis.
 % Developed in 2012 by Trusted Computing Group (TCG) as a successor of Opal 1.0.
 Information for this chapter comes primarily from the Core standard~\cite{tcg-storage-core} and the Opal standard~\cite{tcg-opal2}.
 
 Opal offers several features to help with securing data on the disk.
-Some of those features are locking ranges, allowing to deny access to only part of the disk, authorities, allowing to specify a set of capabilities to credentials, or shadow MBR, to allow pre-boot authentication.
-Each of these features is described more thoroughly in the following sections.
-
-
+Some of those features are locking ranges, allowing to deny access to only part of the disk, authorities, allowing to specify a set of capabilities to credentials, or shadow MBR, to allow pre-boot authentication even with a fully encrypted disk. Together with the architecture, protocols, and many different properties, the standard can get very complex and yet its understanding is fundamental for any elementary work with devices implementing it.
+In this chapter, we are planning to introduce these features together with the context within which they are contained.
+% Each of these features is described more thoroughly in the following sections.
 \todo[color=green]{maybe split it into TCG storage and TCG opal chapters/sometghings., nah opal merged everywhere}
 
-In the following sections, we shall first describe the specification, its features and capabilities as described by the Core and Opal standards. Afterwards, we will focus on the mandatory features and requirements on Opal devices, and lastly, we will describe the interface available on a Linux host. 
+% In the following sections, we shall first describe the specification, its features and capabilities as described by the Core and Opal standards. Afterwards, we will focus on the mandatory features and requirements on Opal devices.
+% , and lastly, we will describe the interface available on a Linux host. 
 
 \todo[color=green]{maybe move this talk about ioctl etc out of the chapter into a separate chapter,,, with external tools... yea, I think it's fine as it is... since it is still tightly bound to opal.. i guess}
 
@@ -27,6 +27,9 @@ Each of these SSCs is focused on a different use case. These SSCs are namely: \b
     \item \emph{Pyrite SSC} is encryption-less Opalite. However, it does not mandate encryption of data saved on disk and instead may offer only logical access control~\cite{tcg-pyrite}.
     \item \emph{Ruby SSC} is focused on data centres and server drives. Ruby SSCs may provide only a single global locking range, a weaker configuration of access control, and no pre-boot authentication support~\cite{tcg-ruby}. Replacing the older Enterprise subsystem.\todo{optionally PSK?}
 \end{itemize}
+% Is it used somewhere?
+The list of officially certified products and their SSCs can be found at TCG's Storage Certified Products web page\footnote{\url{https://trustedcomputinggroup.org/membership/certification/storage-certified-products/}}. The web page contains a list of products that were certified and requested to be published. At the time of writing, the list contains one product. The certified test house ULINK Technology offers its own list of certified disks on its web site\footnote{\url{https://ulinktech.com/tcg-certification-compliance-test-suite-list/}}. Some data protection solutions also provide a list of supported drives with their SSCs. However, in all of those cases, the listed drives implement mainly only Opal, Pyrite or Enterprise SSCs. We have not been able to find any listings of Opalite or Ruby SSCs, which we suspect is mostly because of the short length of existence in the case of Ruby SSC, and being only a simplified version of other SSC in the case of Opalite SSC.
+
 
 Other than the Core and SSC standards defining the fundamentals of the devices, there are defined also Feature Sets. These Feature Sets expand the standards with less fundamental features. Some of those are 
 the Additional DataStore~\cite{tcg-additional-datastore}, providing storage for arbitrary data,
@@ -70,7 +73,7 @@ A trusted peripheral (TPer) is a component located on the disk that provides the
 TPer mediates the communication between its Security Providers and the host.
 In order to maintain the state of the device, tables are used.
 There are two types of tables: byte tables, consisting of raw bytes, and object tables, with defined columns and rows, called objects.
-Each template defines its tables, such as the key tables containing keys for different LRs, or the meta table called the Table table, which contains information about all the other tables in the SP.
+Each template defines its tables, such as the key tables containing DEKs, or the meta table called the Table table, which contains information about all the other tables in the SP.
 Although the Core standard specifies a way to create new tables or delete existing ones, this feature is not required by the Opal standard.
 
 Security Provider (SP) is defined as a set of tables, methods and access control. SPs are derived from a set of templates, which define a set of tables and methods aimed at one functionality, a subset of which the SP implements. The templates are described more closely in a later section \ref{templates}.
@@ -87,9 +90,9 @@ In order to send commands to the TPer or the SPs and receive responses, the Core
 % ((It's actually session, management, communication, TPer, interface, transport, in different part, fixup TODO.))
 This protocol is split into several layers.
 
-Starting from the lowest layer described in this thesis is the interface layer. The interface layer corresponds to the communication with the control unit of the disk. Depending on the disk interface, there can be different security commands used to communicate. The Core standard abstracts these commands into two commands: IF-RECV and IF-SEND for receiving data from disk and sending data to disk, respectively. These commands facilitate all the communication necessary to communicate with the higher layers and are described more closely in section~\ref{direct_communication_raw_ioctl}.
+Starting from the lowest layer described in this thesis is the interface layer. The interface layer corresponds to the communication with the control unit of the disk. Depending on the disk interface, there can be different security commands used to communicate. The Core standard abstracts these commands into two commands: IF-RECV and IF-SEND for receiving data from disk and sending data to disk, respectively. These commands facilitate all the communication necessary to communicate with the higher layers and are described more closely in Section~\ref{section:direct_communication_raw_ioctl}.
 
-The following layer is the TPer layer, a layer used primarily for the allocation of ComID. Since on this layer, the ComIDs are not used yet, and so the state of the communication cannot be kept, the communication is only one way, each "session" consisting only of one command.
+The following layer is the TPer layer, a layer used primarily for the allocation of ComID, a number identifying the caller described in more detail in Subsection~\ref{subsection:comid}. Since on this layer, the ComIDs are not used yet, and so the state of the communication cannot be kept, the communication is only one way, each "session" consisting only of one command.
 
 The Communication layer supports ComIDs and therefore allows two-way communication and is used primarily for further ComID management, such as getting the state of ComID or resetting the state of ComID.
 
@@ -98,10 +101,11 @@ The Management layer facilitates establishing of a session between an SP and the
 The final layer is the Session layer. At this layer, the session is already established, and communication can be performed using methods sent in packets. Most of the communication occurs in this layer with the use of method invocations.
 
 \subsection{ComID}
+\label{subsection:comid}
 
 One of the information required in order to send a command is the ComID, a number identifying the caller (e.g. application of the host). It ensures that responses to method calls will be received by the correct application since there can be at one time multiple callers. 
 There are three types of ComIDs: statically allocated ComID, dynamically allocated ComID and special ComIDs.
-Statically allocated ComID can be acquired through the level 0 Discovery process, described in section~\ref{section:opal_capability_discovery}. The Discovery process simply informs about the base ComID number and the number of static ComIDs.
+Statically allocated ComID can be acquired through the Level 0 Discovery process, described in Section~\ref{section:opal_capability_discovery}. The Discovery process simply informs about the base ComID number and the number of static ComIDs.
 Dynamically allocated ComID can be acquired using the \verb|GET_COMID| command.
 There also exist special ComIDs that are used to invoke the Level 0 Discovery or for ComID management.
 
@@ -116,12 +120,54 @@ ComPacket is the outermost one. Each ComPacket contains data for communication u
 
 \subsection{Methods}
 
+% \newcommand{\bitlabel}[2]{%
+% \bitbox[]{#1}{%
+% \raisebox{0pt}[4ex][0pt]{%
+% \turnbox{45}{\fontsize{7}{7}\selectfont#2}%
+% }%
+% }%
+% }
+
+% \begin{figure}
+%     \centering
+% % \begin{bytefield}[bitwidth=0.11111\linewidth,bitheight=4.66em, bitformatting={\small}]{9}
+% \begin{bytefield}[bitwidth=0.1\linewidth,bitheight=3.33em, bitformatting={\small}]{9}
+%  \hspace{-5mm} Byte: \bitheader{0-8} \\
+% \bitbox{1}{Call token} &
+% \bitbox{8}{Invoking UID} \\ 
+% \bitbox{8}{Method UID} &
+% \bitbox{1}{Start List token} \\
+% \bytefieldsetup{bitheight=2.5ex}%
+% \wordbox[lrt]{1}{arguments} \\
+% \bytefieldsetup{bitheight=0ex}%
+% \skippedwords \\
+% \bytefieldsetup{bitheight=2.5ex}%
+% \wordbox[lrb]{1}{} \\
+% \bitbox{1}{\small End List token} &
+% \bitbox{1}{\small End of Data token} &
+% % \bitbox{5}{Status List}
+% \bitbox{1}{\small Start List token} & 
+% % \bitbox{1}{\scriptsize Trans-action Status Code} &
+% \bitbox{1}{Status Code} &
+% \bitbox{1}{00} &
+% \bitbox{1}{00} &
+% \bitbox{1}{End List token}
+% \end{bytefield}
+%     \caption{Format of method invocation}
+%     \label{fig:format_of_method}
+%     % \todo{why is the comment after bytefieldsetup needed??????????}
+% \end{figure}
+
 
 \begin{figure}
     \centering
+    \vspace{6mm}
 % \begin{bytefield}[bitwidth=0.11111\linewidth,bitheight=4.66em, bitformatting={\small}]{9}
 \begin{bytefield}[bitwidth=0.1\linewidth,bitheight=3.33em, bitformatting={\small}]{9}
-    \bitheader{0-8} \\
+ % \hspace*{-10mm}\vspace*{-2mm}  {Byte:}
+ % \hspace*{-10mm}
+ % \vspace*{-10mm}  \bitheader{0-8} \\
+\bitheader{0-8} \\
 \bitbox{1}{Call token} &
 \bitbox{8}{Invoking UID} \\ 
 \bitbox{8}{Method UID} &
@@ -142,14 +188,53 @@ ComPacket is the outermost one. Each ComPacket contains data for communication u
 \bitbox{1}{00} &
 \bitbox{1}{End List token}
 \end{bytefield}
+
+\vspace{-86.6mm}\hspace*{-102mm} \small Byte:
+\vspace{ 82mm} %\hspace*{ 70mm} 
     \caption{Format of method invocation}
     \label{fig:format_of_method}
     % \todo{why is the comment after bytefieldsetup needed??????????}
-
 \end{figure}
 
+% \begin{figure}
+%     \centering
+%     \vspace{1.5mm}
+% % \begin{bytefield}[bitwidth=0.11111\linewidth,bitheight=4.66em, bitformatting={\small}]{9}
+% \begin{bytefield}[bitwidth=0.1\linewidth,bitheight=3.33em, bitformatting={\small}]{9}
+%  % \hspace*{-10mm}\vspace*{-2mm}  {Byte:}
+%  % \hspace*{-10mm}
+%  % \vspace*{-10mm}  \bitheader{0-8} \\
+% \bitheader{0-8} \\
+% \bitbox{1}{Call token} &
+% \bitbox{8}{Invoking UID} \\ 
+% \bitbox{8}{Method UID} &
+% \bitbox{1}{Start List token} \\
+% \bytefieldsetup{bitheight=2.5ex}%
+% \wordbox[lrt]{1}{arguments} \\
+% \bytefieldsetup{bitheight=0ex}%
+% \skippedwords \\
+% \bytefieldsetup{bitheight=2.5ex}%
+% \wordbox[lrb]{1}{} \\
+% \bitbox{1}{\small End List token} &
+% \bitbox{1}{\small End of Data token} &
+% % \bitbox{5}{Status List}
+% \bitbox{1}{\small Start List token} & 
+% % \bitbox{1}{\scriptsize Trans-action Status Code} &
+% \bitbox{1}{Status Code} &
+% \bitbox{1}{00} &
+% \bitbox{1}{00} &
+% \bitbox{1}{End List token}
+% \end{bytefield}
+
+% \vspace{-82mm}\hspace*{-117mm} \small Byte:
+% \vspace{ 82mm} %\hspace*{ 70mm} 
+%     \caption{Format of method invocation}
+%     \label{fig:format_of_method}
+%     % \todo{why is the comment after bytefieldsetup needed??????????}
+% \end{figure}
+
 The commands of the lower layers to TPer and SPs and their respective responses are transported by the Data SubPackets in the form of methods. 
-These are expressed using a set of lexical tokens in a specific order, described by figure~\ref{fig:format_of_method}.\todo[color=green]{maybe describe tokens? but that seems like a little bit too much,,, right?, maybe just simple, sequence, control, added lexical to make it obviious, good enought i guess}
+These are expressed using a set of lexical tokens in a specific order, described by Figure~\ref{fig:format_of_method}.\todo[color=green]{maybe describe tokens? but that seems like a little bit too much,,, right?, maybe just simple, sequence, control, added lexical to make it obviious, good enought i guess}
 % Data SubPacket carries either the method call or method response. %can't there be something else?
 Other than the constant tokens such as call tokens or end list tokens, each method invocation contains Invoking UID, Method UID, arguments, and status code list.
 Invoking UID is used to identify which structure the method is invoked on. Other than tables and rows of tables, there are also special Invoking UIDs which can be used. These special Invoking UIDs are ThisSP, signifying the SP with which the current session is open, and SMUID, signifying the session manager.
@@ -182,11 +267,11 @@ There are two types of sessions: control session, used for session management, a
 % (not going to care about control much, just between the TPer session manager and host session manager)...
 Since the control session is used to establish a regular session with an SP, it is not connected to any SP. The control session is used for managing the regular sessions and, as such, provides methods such as:
 \begin{itemize}
-\item The \emph{Properties} method enables one to find a compromise between the communication capabilities of the host and the TPer or simply find the communication capabilities of the TPer. Using this method, the properties defined earlier in section~\ref{TODO}, such as maximum packet size, are established.
-\item The \emph{StartSession} and \emph{SyncSession} methods provide a way to start an unencrypted session.
+\item \emph{Properties} method enables one to find a compromise between the communication capabilities of the host and the TPer or simply find the communication capabilities of the TPer. Using this method, the properties defined earlier in Section~\ref{section:opal_capability_discovery}, such as maximum packet size, are established.
+\item \emph{StartSession} and \emph{SyncSession} methods provide a way to start an unencrypted session.
 % \item The StartTrustedSession and SyncTrustedSession methods provide a way to start an encrypted session. They are used if needed after a StartSession/SyncSession invocation to finish protocols requiring two passes, such as ...
-\item The \emph{StartTrustedSession} and \emph{SyncTrustedSession} methods provide a way to complete challenge-response authentication or to set up secure messaging/key exchange.
-\item The \emph{CloseSession} method used to close the session.
+\item \emph{StartTrustedSession} and \emph{SyncTrustedSession} methods provide a way to complete challenge-response authentication or to set up secure messaging/key exchange.
+\item \emph{CloseSession} method used to close the session.
 \end{itemize}
 Each ComID has one associated control session with a lifespan the same as the ComID since a control session is required to create a regular session. On the other hand, there can be multiple regular sessions.
 
@@ -194,7 +279,7 @@ Each ComID has one associated control session with a lifespan the same as the Co
 % \subsubsection{Secure messaging}
 
 Depending on the authorities used, it is also possible to start a secure messaging session, which provides message authenticity and/or confidentiality.
-Authority's operation type decides what kind of trusted messaging is to be used. These are further described in the subsection~\ref{subsection:authorities}. 
+Authority's operation type decides what kind of trusted messaging is to be used. These are further described in the Subsection~\ref{subsection:authorities}. 
 %With other cases there is no secure messaging.
 However, Opal does not mandate the support of secure messaging.
 
@@ -266,10 +351,10 @@ Each authority is an object in the authority table of the corresponding SP and h
 \subsection{Authorities}
 \label{subsection:authorities}
 
-Authorities are constructs used to represent an actor. Authorities are saved in the Authority table of every SP, provided by the Base template, and so are separate for each of the SP. Each authority is associated with one credential. This credential is an object from a table, depending on the type of the credential.
+Authorities are constructs used to represent an actor. Authorities are saved in the Authority table of every SP, provided by the Base Template, and so are separate for each of the SP. Each authority is associated with one credential. This credential is an object from a table, depending on the type of the credential.
 
-The Base template defines several optional authorities such as the Admin authorities, representing the owner of the SP, the Makers authorities, representing the manufacturer of the TPer, the Security Identifier authority (SID), representing the owner of the TPer, and TPer authorities, representing the TPer itself.
-The Base template also defines a special authority Anybody without any credentials. This authority can be used in reading public info of the SPs or to take ownership of the TPer.
+The Base Template defines several optional authorities such as the Admin authorities, representing the owner of the SP, the Makers authorities, representing the manufacturer of the TPer, the Security Identifier authority (SID), representing the owner of the TPer, and TPer authorities, representing the TPer itself.
+The Base Template also defines a special authority Anybody without any credentials. This authority can be used in reading public info of the SPs or to take ownership of the TPer.
 
 % Other templates also define other authorities. Both  such as the User authorities from Locking template, ...
 
@@ -293,7 +378,7 @@ However, the only operation type mandated by Opal to be implemented is the Passw
 
 In order to keep information about the state and the working capacity of an SP, the concept life cycle is introduced. The life cycle describes the condition of an SP using one of several states. In the Core standard~\cite{tcg-storage-core}, the following states are introduced: 
 \begin{itemize}
-\item \emph{Nonexistent} state is describes SP which does not exist. The SP might not have been created or already deleted.
+\item \emph{Nonexistent} state describes SP which does not exist. The SP might not have been created or is already deleted.
 \item \emph{Issued} state describes SP in functional state.
 \item \emph{Issued-Disabled} state describes SP which can only be authenticated to and enabled. All other functionality is disabled. An SP can be enabled and disabled using the SPInfo table of the corresponding SP.
 \item \emph{Issued-Frozen} state describes SP with no functionality enabled. An SP can be frozen and unfrozen using the SP table of the Admin SP.
@@ -307,7 +392,7 @@ SP issuance is the process of creating a new SP from the Base Template and a set
 
 \subsection{Life cycles in Opal}
 
-Opal standard~\cite{tcg-opal2} extends the states defined in the Core specification with a new set of life cycle states: Manufactured-Inactive, Manufactured, Manufactured-Failed, Manufactured-Disabled, Manufactured-Disabled-Frozen, Manufactured-Disabled. Each of these new states mirrors the corresponding ``issued'' state from the Core specification. Compared to the ``issued'' states, the ``manufactured'' states are created during manufacturing by the manufacturer instead of during the subsequent use by the TPer owner. This is reflected by the fact that these manufactured SPs are not issued and deleted in Opal. Instead, they are activated and reverted. Activation automatises the personalisation using hardcoded, preconfigured values. Reverting SP maintains its existence, returning it to the factory state instead. Note that this means that the Manufactured-Inactive corresponds to the Nonexistent state.
+Opal standard~\cite{tcg-opal2} extends the states defined in the Core specification with a new set of life cycle states: Manufactured-Inactive, Manufactured, Manufactured-Failed, Manufactured-Disabled, Manufactured-Disabled-Frozen, Manufactured-Disabled. Each of these new states mirrors the corresponding ``issued'' state from the Core specification. Compared to the ``issued'' states, the ``manufactured'' states are created during manufacturing by the manufacturer instead of during the subsequent use by the TPer owner. This is reflected by the fact that these manufactured SPs are not issued and deleted in Opal. Instead, they are activated and reverted. Activation automates the personalisation using hardcoded, preconfigured values. Reverting SP maintains its existence, returning it to the factory state instead. Note that this means that the Manufactured-Inactive corresponds to the Nonexistent state.
 
 \subsection{Taking ownership}
 
@@ -351,7 +436,7 @@ Some of the frequent features described by these descriptors are:
 \item \emph{TPer Feature Descriptor} reports supported communication features such as ACK/NACK support, ComID management, buffer management, or asynchronous communication.
 \item \emph{Locking Feature Descriptor} reports information relevant to the Locking SP, such as support of data encryption, whether the disk is locked or the status of master boot record shadowing.
 \item \emph{Geometry Feature Descriptor} reports information about the geometry of the disk, such as block size or alignment granularity.
-\item \emph{SingleUser Feature Descriptor} reports information about SingleUser Feature Set, such as whether it is activated,
+\item \emph{Single User Mode Feature Descriptor} reports information about Single User Mode Feature Set, such as whether it is activated, or how many locking ranges can be activated under this mode at once.
 \item \emph{DataStore Feature Descriptor} reports information about DataStore Feature Set, such as the maximum size of the DataStore table or maximum count of DataStore tables. 
 \item \emph{Opal 2.0 Feature Descriptor} reports information specific to Opal SSC, such as the base ComID, number of ComIDs, or the maximum number of users and admins authorities of Locking SP.
 \end{itemize}
@@ -360,7 +445,8 @@ Some of the frequent features described by these descriptors are:
 
 Level 1 Discovery provides information about the capabilities of the communication channel and is performed using the \verb|Properties| control session method\todo[color=green]{introduce control session method earlier?, now it's after communication section}. The Level 1 Discovery is used not only as a way for the host to find out the capabilities of the TPer, but to determine shared limits depending on the capabilities of both the TPer and the host, as the host can also communicate its capabilities to the TPer.
 
-The reported properties mandatory for Opal are:
+% The reported properties mandatory for Opal are:
+The reported properties that are mandatory for Opal are:
 \begin{itemize}
 \item \verb|MaxMethods| property describes the maximum number of methods per received SubPacket.
 \item \verb|MaxSubpackets| property describes the maximum number of SubPacket per received Packet.
@@ -388,7 +474,7 @@ There are also defined properties which are not required in Opal, as they descri
 \item \verb|Asynchronous| property describes the support of asynchronous communication.
 \end{itemize}
 
-Other than the defined properties, the level 1 Discovery process may also report vendor-specific properties.
+Other than the defined properties, the Level 1 Discovery process may also report vendor-specific properties.
 
 \subsection{Level 2 Discovery}
 
@@ -475,7 +561,7 @@ Similarly to the methods, the Opal standard does also not require every table de
     \item \emph{Table} table contains metadata about tables used by the SP.
     \item \emph{MethodID} table contains metadata about methods used by the SP.
     \item \emph{AccessControl} table contains ACLs for combinations of methods and tables.
-    \item \emph{ACE} table contains definitions of ACEs as described in section~\ref{section:access_control}.
+    \item \emph{ACE} table contains definitions of ACEs as described in Section~\ref{section:access_control}.
     \item \emph{Authority} table contains list of authorities.
     \item \emph{C\_PIN} table contains password credentials of authorities.
 \end{itemize}
@@ -534,8 +620,8 @@ Locking SP shared the Base Template and Opal-specific tables with Admin SP, but 
     \item Locking Template tables:
     \begin{itemize}
         \item \emph{LockingInfo} table metadata for locking mechanisms, such as the maximum number of locking ranges or supported types of encryption. 
-        \item \emph{Locking} table contains the state of locking ranges, more closely described in subsection~\ref{locking_range}.
-        \item \emph{MBRControl} table metadata for MBR shadowing (Enable, Done, DoneOnReset).
+        \item \emph{Locking} table contains the state of locking ranges, more closely described in Subsection~\ref{locking_range}.
+        \item \emph{MBRControl} table contains metadata for MBR shadowing (Enable, Done, DoneOnReset).
         \item \emph{MBR} byte table containing the shadow MBR.
         \item \emph{K\_AES\_128} and \emph{K\_AES\_256} tables contain the DEKs for each of the locking ranges. It can be accessed only by using the GenKey method.
     \end{itemize}
@@ -548,7 +634,7 @@ Locking SP shared the Base Template and Opal-specific tables with Admin SP, but 
 \subsection{Locking range}
 \label{locking_range}
 
-The locking range feature gives the user a way to specify an LBA range on the disk that can be locked independently on the rest of the disk. Each locking range also has its own ACE to control who can lock and unlock the range. Because each LR is also encrypted using its own DEK, it is possible to re-generate a new DEK for a single LR, discarding data of only one LR.
+The locking range (LR) feature gives the user a way to specify an LBA range on the disk that can be locked independently on the rest of the disk. Each locking range also has its own ACE to control who can lock and unlock the range. Because each LR is also encrypted using its own DEK, it is possible to re-generate a new DEK for a single LR, discarding data of only one LR.
 
 
 There also always exists a special range called the global locking range that covers any area on the disk that is not already covered by a regular locking range.
@@ -622,17 +708,17 @@ When \verb|Enable| is true and \verb|Done| is false, the shadowing is active, an
 % contents of the feature descriptor are defined in Table 2.
 
 
-\section{Host-side implementation}
+\chapter{Opal interface in Linux}
 
 The Linux kernel offers two ways to control an Opal device from the host. Both ways use the Linux ioctl system call. In this section, we will introduce these two approaches.
 
 % Other than using generic SED software introduced in chapter~\ref{TODO}, there are more low-level approaches to controlling Opal hardware available, which offer more control over the device. In this section, we will introduce two such approaches available in Linux systems.
 
-\subsection{Opal ioctl}
-\label{subsection:opal_opal_ioctl}
+\section{Opal ioctl}
+\label{section:opal_opal_ioctl}
 
 Since version 4.11, the Linux kernel offers a set of ioctl requests to facilitate control over an Opal disk~\cite{linux-opal-introduction-mail}. 
-The individual implemented ioctl requests for Opal functionality and their function as of Linux kernel 5.19 are:
+The individual implemented ioctl requests for Opal functionality and their function as of Linux kernel v6.1 are:
 \begin{itemize}
 \item \verb|SAVE| command keeps a key for a locking range in the host's RAM so that it can be used to unlock the disk after waking from suspension. Exported symbol \verb|opal_unlock_from_suspend| can be used to unlock the disk using the saved data. The command can be repeated to save keys for multiple locking ranges. % Note that because the data is saved only in the RAM, this cannot be used to unlock disk after from.
 %(??? What did i mean by this?... anyway this is entry point for some vulnerability analysis because it basically gives us back the cold boot attack!).
@@ -652,6 +738,7 @@ The individual implemented ioctl requests for Opal functionality and their funct
 \item \verb|MBR_DONE| command changes \verb|Done| column of the \verb|MBRControl|. % only when both the \verb|Done| and \verb|Enable| parameters are enabled, MBR shadowing is active.
 \item \verb|WRITE_SHADOW_MBR| command writes data into the MBR table.
 \item \verb|GENERIC_TABLE_RW| command reads a byte table or writes it into a byte table. Neither object tables nor iteration is supported.
+\item \verb|GET_STATUS| command returns information about the disk, such as it's support of Opal SSC, status of MBR shadowing, or whether the Locking SP is activated.
 \end{itemize}
 
 Although these ioctl requests offer simple access to control the Opal capabilities of a disk, not every feature mandated by Opal is implemented. Some of the limitations are the following: 
@@ -664,11 +751,11 @@ Although these ioctl requests offer simple access to control the Opal capabiliti
 \item No way to read or write to object table rows or iterating tables. This prevents the possibility of replacing the missing features using a direct setting of values in a table.
 \end{itemize}
 
-Currently, there is no documentation to be found for the ioctl requests for Opal functionality. The information in the previous list was acquired from our code analysis.
-A short program showcasing the usage of this interface can be seen in the appendix~\ref{TODO}.
+Currently, there is no documentation to be found for the ioctl requests for Opal functionality. The information in the previous list was acquired from our code analysis.\todo{removed mentioning of the code in appendix, doesn't seem that useful}
+% A short program showcasing the usage of this interface can be seen in the Appendix~\ref{appendix:opal_ioctl}.
 
-\subsection{Drive interface ioctl}
-\label{direct_communication_raw_ioctl}
+\section{Drive interface ioctl}
+\label{section:direct_communication_raw_ioctl}
 
 Alternative to the Opal ioctl requests are the disk controller ioctl requests. Depending on the disk protocol, a different way of passing the Opal commands is required.
 The TCG SIIS specification~\cite{tcg-siis} describes the mapping of the abstract IF-RECV and IF-SEND commands to the actual commands of disk interfaces for different drive interfaces.
@@ -688,7 +775,7 @@ However, using the SCSI \verb|SG_IO| ioctl request with its \verb|sg_io_hdr_t| s
 
 Using these structures, the Opal commands described in section \ref{opal_communication} can be sent to the TPer. Compared to the Opal ioctl requests, this has the advantage of not being limited only to a subset of features that the Opal ioctl requests implement and instead being able to use every Opal feature the device offers. % This is not limited only to \dots (e.g. improve performance by using optional features such as concurrency, etc, described earlier) \dots
 
-Although this approach gives the host application access to every feature of the Opal disk, it also requires it not only to implement the command hand-over for each type of disk separately but also to create the methods and parse the method results, both described in the chapter \ref{opal_communication}, on their own.
+Although this approach gives the host application access to every feature of the Opal disk, it also requires it not only to implement the command hand-over for each type of disk separately but also to create the methods and parse the method results, both described in the Chapter~\ref{opal_communication}, on their own.
 
 \todo{disk interface popsat\cite{NVME}}
 

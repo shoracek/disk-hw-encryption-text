@@ -1,4 +1,7 @@
+\newcommand{\REPLACEME}{\paragraph{Impact on Opal devices}}
+
 \chapter{Security of hardware encryption}
+\label{chapter:security}
 
 Disk encryption is usually not meant to protect the content of the device while it is being actively used.
 For example, the Opal standard aims to only \enquote{Protect the confidentiality of stored user data against unauthorized access once it leaves the owner's control (following a power cycle and subsequent deauthentication)}~\cite{tcg-opal2}.
@@ -28,6 +31,8 @@ In this chapter, we will provide an overview of state-of-the-art attacks relevan
 \section{Evil maid attack}
 
 An evil maid attack~\cite{self_decrypting_risks,systematic_assessment_of_the_security} consists of a situation where the device is left unattended for some time, during which the attacker has full physical access. Such attacks often have two phases. In the first phase, the disk is modified, e.g. by installing custom firmware or inserting a probe to eavesdrop on the communication. Then, the victim uses the disk, providing the password to unlock it. In the second phase, the attacker returns to collect the obtained information and undoes their changes. In some cases, the attacker might not require physical access to the device and instead use a network to receive information and have, e.g. the modified firmware reverse itself or simply leave traces if the discovery of the attack is not a problem.
+
+\REPLACEME
 
 For the two phase type of the attack, the Opal disk itself has protection against unauthorized changes. The shadow MBR requires authentication to be changed, and although newer versions of Opal do not mandate an interface for firmware update anymore, it is standard practice to require a newer signed firmware to update.
 But eavesdropping the communication between the host and the drive is still possible, as Opal does not mandate secure messaging, and therefore any encrypted communication, it is still a real possibility to insert a probe in between the disk and the computer.
@@ -65,20 +70,25 @@ Attack on key generation are such attacks which abuse the RNG generating data wi
 % Such vulnerabilities are not unprecedented. \cite{got_hw_crypto}
 Since Opal specification does not actually specify any implementation for the RNG, we cannot perform any fruitful analysis of the standard itself. However, we can still try to perform practical analysis.
 
+
+\REPLACEME
+
 The Opal specification offers a few ways how to generate random data. The most useful would be GenKey, as it is used for generating DEKs, but since the destination cells, where the result is recorded, are protected from reading, we cannot easily read them to get the generated values.
-Another method of generating random data is the method Random. This method allows us to get at least 32 bytes~\cite{tcg-opal2} every invocation. Even though the RNG used by this method might be different to the one used by the GenKey method to generate DEKs and the has low performance (our slowest tested disk was able to generate about 3000 bytes per second), the Random method provides an easy access to the generated data.
-We have decided to used the Random method to generate random bytes to inspect. In order to test the generated data, we have used the \emph{dieharder}\footnote{\url{https://webhome.phy.duke.edu/~rgb/General/dieharder.php}} random number tester.
+Another method of generating random data is the method Random. This method allows us to get at least 32 bytes~\cite{tcg-opal2} every invocation. Even though the RNG used by this method might be different to the one used by the GenKey method to generate DEKs and has low performance (our slowest tested disk was able to generate about 500 bytes per second), the Random method provides easy access to the generated data.
+To test the randomness of the RNG of the disks, we have decided to use the Random method and the \emph{dieharder}\footnote{\url{https://webhome.phy.duke.edu/~rgb/General/dieharder.php}} random number generator tester.
 % Using this method, we have decided to generate random bytes to inspect later.\todo{what about testing by reading the disk directly??? }
 % In order to test these generated numbers we have decided to use the \emph{dieharder}\footnote{\url{https://webhome.phy.duke.edu/~rgb/General/dieharder.php}} random number tester.
 From the disks we have inspected, we have found the following about their RNG:
 \begin{itemize}
-    \item \emph{SanDisk X300s} generates always the same bytes for the first Random invocation of a session. The value of the first bytes seems to change only after the new activation of Locking SP. Following invocations of the Random method in a single session return different bytes. This weakness does seem to also affect the key generation. We tested this by zeroing out several blocks of the drive and regenerating the DEK. Each time we regenerated the key the drive content was different. However, we have decided to also test the randomness of the content. If we zeroed out the content before the key regeneration, the content did not pass the test of randomness. If we, however, wrote random data before the key regeneration, the content did pass the randomness test. This property was different from every other disk, and may suggest that the key generation is truly not entirely random. Looking closer at the contents of the disk generated this way, it is possible to see several patterns described more closely in appendix~\ref{appendix:rng_pattern}.\todo{maybe move the appendix here? to make the own text bigger :))))}%\todo{check out if this is not just cbc thing, since this one is the only non-xts}
+    \item \emph{SanDisk X300s} generates always the same bytes for the first Random invocation of a session. The value of the first bytes seems to change only after the new activation of Locking SP. Following invocations of the Random method in a single session return different bytes. This weakness does seem to also affect the key generation. We tested this by zeroing out several blocks of the drive and regenerating the DEK. Each time we re-generated the key the drive content was different. However, we have decided to also test the randomness of the content. If we zeroed out the content before the key regeneration, the content did not pass the test of randomness. If we, however, wrote random data before the key regeneration, the content did pass the randomness test. This property was different from every other disk, and may suggest that the key generation is truly not entirely random. Looking closer at the contents of the disk generated this way, it is possible to see several patterns described more closely in Appendix~\ref{appendix:rng_pattern}.\todo{maybe move the appendix here? to make the own text bigger :))))}%\todo{check out if this is not just cbc thing, since this one is the only non-xts}
     % \item Kingston KC600 --- for the minimum 32 bytes, the TPer closes the session on Random invocation. The same response was for most of the other tested values. However, if exactly $256^n-1$ bytes are requested, $128+n$ bytes are returned... lol, I see where the problem is now. The TPer doesn't parse it as a token but as a regular ``C'' unsigned integer. So, it was reading the header instead, and the \verb|0xff| bytes were required for ``NOPs'' since they are tokens for empty atoms. With a slight modification, we can get up to 255 bytes from this disk at once.
-    \item \emph{Kingston KC600} generates random data that passes all diehard tests, even though the Random method requires extra consideration while it is being invoked. The Random method of this does not actually accept parameters as atoms but as unsigned integers. However, this does not cause difference in behaviour as long as the value of the atom is small enough.  %  generate data although this drive does not parse the Random method correctly, not being able to parse the header of the number atom, 
+    \item \emph{Kingston KC600} generates random data that passes most dieharder tests, even though the Random method requires extra consideration while it is being invoked. The Random method of this does not actually accept parameters as atoms but as unsigned integers. However, this does not cause difference in behaviour as long as the value of the atom is small enough.  %  generate data although this drive does not parse the Random method correctly, not being able to parse the header of the number atom, 
 % all dieharder tests passed.
 %  for the minimum 32 bytes, the TPer closes the session on Random invocation. The same response was for most of the other tested values. However, if exactly $256^n-1$ bytes are requested, $128+n$ bytes are returned... lol, I see where the problem is now. The TPer doesn't parse it as a token but as a regular ``C'' unsigned integer. So, it was reading the header instead, and the \verb|0xff| bytes were required for ``NOPs'' since they are tokens for empty atoms. With a slight modification, we can get up to 255 bytes from this disk at once.
-    \item \emph{Samsung SSD 850 PRO, Samsung SSD 860 EVO and Samsung SSD 980} generate random data that passes all diehard tests. % passed for the generated data\todo{recheck for all actually....}.
+    \item \emph{Samsung SSD 850 PRO, Samsung SSD 860 EVO and Samsung SSD 980} generate random data that passes most of  dieharder tests. % passed for the generated data\todo{recheck for all actually....}.
 \end{itemize}
+As the generation of random bytes takes a considerable amount of time, we have generated only a limited number of bytes for the test. This is most likely the cause of some tests not passing, as they have reused the input several times.
+\todo{something how not everytinh buit a large majority of diehard tests passed but that's expected and most likely because of small amount of data}
 
 % Note that for the testing of SanDisk X300s' RNG, we did not include the first batch of random bytes that were always the same, as they would spoil the perceived randomness of the rest of the numbers.
 
@@ -89,9 +99,11 @@ From the disks we have inspected, we have found the following about their RNG:
 
 In this attack, a property of volatile memories is used. Even though volatile memories lose the data stored in them after powering off, they do not lose the data instantly. This introduces the cold boot attack, which takes advantage of this fact. One of the ways this attack can be implemented is to take a RAM stick from the victim's locked computer and install it into the attacker's computer, where it can be read. Another possible approach is the reboot the victim's computer into the attacker's system.
 
+\REPLACEME
+
 Even though this attack works quite well against software-based disk encryption and software encryption in general, against purely SED, it does not work that effectively. This is because, compared to software encryption, there is no need to store the encryption key in the computer's memory. The key is instead stored in the memory of the disk controller, where it can be physically protected against removal.
 % .. (and also, it's not a generic RAM stick). 
-However, this advantage holds only for the case where the key or the disk password is truly not kept also in the computer's memory, which may not always be the case with SEDs. In the Linux Opal ioctl commands introduced in an earlier subsection~\ref{subsection:opal_opal_ioctl}, there is introduced functionality to save the password for locking range in the memory. This functionality is introduced in order to allow the computer to wake from suspension automatically since the disk might need to be unlocked in such a case. But since the key is stored in the computer's memory, it is possible to acquire it using the cold boot attack.
+However, this advantage holds only for the case where the key or the disk password is truly not kept also in the computer's memory, which may not always be the case with SEDs. In the Linux Opal ioctl commands introduced in an earlier Section~\ref{section:opal_opal_ioctl}, there is introduced functionality to save the password for locking range in the memory. This functionality is introduced in order to allow the computer to wake from suspension automatically since the disk might need to be unlocked in such a case. But since the key is stored in the computer's memory, it is possible to acquire it using the cold boot attack.
 
 \section{Hot plug attack}
 
@@ -100,6 +112,9 @@ Hot plug attacks~\cite{self_decrypting_risks} are attacks similar to cold boot a
 However, this approach is certainly not limited only to SATA disks with separate data and power cables, as it is possible to translate the attack to many different physical disk interfaces. An attack called hot unplug attack~\cite{bypassing_in_enterprise} generalized this attack. 
 Before unplugging the original cable with the power pins, substitute power pins can be connected together with the original ones, keeping the disk device powered while the original cable gets unplugged. 
 % Since in this case the power is never interrupted, it also means that the disk does not 
+
+
+\REPLACEME
 
 The Core standard introduces HotPlug as one of the reset types. This event might seem like a possible solution to such attacks. However,  its meaning is not defined in the standards. TCG Storage Interface Interactions Specification~\cite{tcg-siis}, the standard defining, among other things, the mapping of reset types to disk interface events, does not mention the HotPlug reset type. None of the disks we have tested supported this reset type, so we are left to only speculate about its possible efficacy.
 
@@ -133,7 +148,9 @@ An attack on the interface is such an attack where problems in the interface are
 This might include attacks such as using vendor commands to read the disk directly, even if the disk is locked. In the past~\cite{self_encrypting_deception}, some hardware-encrypted disks were vulnerable to such attacks, allowing the usage of undocumented vendor commands to change the firmware of the device to a custom-made one. %requiring only the usage of undocumented vendor commands to read 
 % either the data of the encryption module (in some cases containing the unencrypted DEK) or even the content of the disk itself.
 
-As can be seen from the previous subsection \ref{attack_rng}, the implementation of the interface is not perfect for some of our tested disks. Even though issues like the disk expecting a different type of format are not directly connected to security in our case, such problems might be a sign of other issues possibly related to security.
+\REPLACEME
+
+As can be seen from the previous Subsection~\ref{attack_rng}, the implementation of the interface is not perfect for some of our tested disks. Even though issues like the disk expecting a different type of format are not directly connected to security in our case, such problems might be a sign of other issues possibly related to security.
 % Something like non-security issues might very likely be a sign of possible security issues, so don't take those problem that we found lightly! Maybe also something that more information can be found in the data chapter or something like that.
 
 This might be especially problem if such malfunctioning interface gives its user false sense of confidence. While testing our disks, we found out several interface flaws with Kingston KC600. One of such flaws is the fact that the disk accepts any value as reset type. While specifying types of resets that should lock a specific interface, it is possible to specify any type, not only types that are not supported, but also types which are not even defined in the standards. This means that after ``successfully'' setting LR to be reset after a hot plug event, it might never actually be once such event happens.

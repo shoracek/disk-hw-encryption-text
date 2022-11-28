@@ -2,25 +2,48 @@
 
 \begin{document}
 
-\input{01introduction.tex}
+\include{01introduction.tex}
 
-\input{02encryption.tex}
+\include{02encryption.tex}
 
-\input{03opal.tex}
+\include{03opal.tex}
 
-\input{04tools.tex}
+\include{04tools.tex}
 
-\input{05attacks.tex}
+\include{05attacks.tex}
 
-\input{06our.tex}
+\include{06our.tex}
 
-\input{07data.tex}
+\include{07data.tex}
 
 \chapter{Conclusion}
 
-In the thesis we have introduced several approaches to using hardware-encrypted block devices in Linux. Then, we have focused on the Opal standard more deeply, ... We have then compared capabilities of several Opal-compliant disks. And finally we have provided an overview on attacks on such devices and their feasibility.
+In this thesis, we introduced several approaches to using hardware-encrypted disks in Linux. Afterwards, we have focused on the Opal standard more deeply as a most prominent representative of hardware disk encryption, describing its architecture and features.
+We described several state-of-the-art attacks relevant to hardware disk encryption and discussed the degree of protection provided by the Opal standard against them.
+We have introduced several popular tools for managing hardware disk encryption and presented our own toolset. 
+Using the tools from this toolset, we managed to find a vulnerability in the generation of keys, and finally, we used it to compare the capabilities of several Opal-compliant disks. 
 
-As can be easily seen from ...\todo{finish me}
+% And finally we have provided an overview on attacks on such devices and their feasibility.
+
+As can be easily seen from the results presented in Chapter~\ref{chapter:security} and Chapter~\ref{chapter:data},
+even though hardware disk encryption presents many advantages over classic software encryption, today's implementations have flaws. Although most of the attacks require physical access, this is not unthinkable, as disks are often stolen.
+For some of the attacks, none of the disks provided a way to prevent them, even though a solution exists in the form of optional features. For those features that were required by the standard and implemented by the disks, some disks did not provide a working implementation. Between these bad implementations, there were even some malign ones, such as a disk not informing about setting an invalid value and even reporting the value as changed or a disk with a problematic generation of random values.
+As such, it may be easy to see the reluctance of some to trust hardware disk encryption and opt for software solutions instead.
+
+\section{Future work}
+
+
+During our analysis of the properties of Opal-compliant disks, we used data set consisting only of five disks. Since the \verb|discovery| utility is designed to not require any authentication nor to modify the analysed disk, it could be possible to involve the public community to collect more data. In order to collect data about random number generators of Opal-compliant disks using the \verb|rng| utility, involving the public community might be more complicated. Generating enough random data using the utility might take quite a considerable amount of time. For example, some of the slower disks are able to generate only around 2~MB of random data per hour. Due to this, it might be much more intrusive to the members of the community compared to the few seconds the \verb|discovery| utility takes.
+
+We have also presented a \verb|control| utility to manage the state of the Opal device. Even though in its current state it gives enough control over the device to allow basic usage, many additional features are not supported. Some of those features are Single User Mode or MBR shadowing. Although not necessary for future analysis of Opal devices, this tool could be updated to support these features.We have also presented a \verb|control| utility to manage the state of the Opal device. Even though in its current state it gives enough control over the device to allow basic usage, many additional features are not supported. Some of those features are Single User Mode or MBR shadowing. Although not necessary for future analysis of Opal devices, this tool could be updated to support these features.
+
+% In future:
+% expand the set of capabilities of the control utility, as need be?
+% get larger data set for discovery, using community effort,
+% continue with collecting rng data, problems with community as it takes long time to collect enough data
+
+
+
 
 \input{99appendices.tex}
 
@@ -36,7 +59,12 @@ As can be easily seen from ...\todo{finish me}
 
 \newpage
 
+% \begingroup
+% \sloppy
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{8000}
 \printbibliography[heading=bibintoc] %% Print the bibliography.
+% \endgroup
 
 \end{document}
 

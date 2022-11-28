@@ -2,9 +2,9 @@
 \chapter{Existing tools}
 \label{chapter_tools}
 
-In order to give users the ability to manage their SED disks without the need to create their own programs to access existing interfaces, there exist several tools implementing the protocols introduced in chapters~\ref{chapter_hardware_disk_encryption}~and~\ref{chapter_opal}. 
+In order to give users the ability to manage their SED disks without the need to create their own programs to access existing interfaces, there exist several tools implementing the protocols introduced in Chapter~\ref{chapter_hardware_disk_encryption} and Chapter~\ref{chapter_opal}. 
 
-Note that for all the tools for managing SATA Opal devices, it is necessary to first set the \verb|allow_tpm| flag of the kernel libATA library to allow Trusted Computing commands~\cite{acs-3}. This can be done either by specifying it as a kernel flag \verb|libata.allow_tpm=1| or, if  by changing the value in the \verb|/sys/module/libata/parameters/allow_tpm| file.~\cite{TODO}\todo{where to find the instructions?, \url{https://wiki.archlinux.org/title/Self-encrypting_drives}}
+Note that some of the the tools use ATA TRUSTED commands for managing ATA Opal devices. When using these commands, it is necessary to first set the \verb|allow_tpm|\footnote{The usage of TPM in the name appears to be purely a historical blunder as it does not seem to be ever used for TPM, a cryptoprocessor standard defined by TCG, the same group defining TCG Storage standards.} flag of the kernel libATA library to allow Trusted Computing commands~\cite{acs-3}. This can be done either by specifying it as a kernel flag \verb|libata.allow_tpm=1|\footnote{\url{https://wiki.archlinux.org/title/Self-encrypting_drives}}.\todo[color=green]{where to find the instructions?, \url{https://wiki.archlinux.org/title/Self-encrypting_drives}}
 
 % Some disks might provide their own software for their own proprietary hardware encryption. These are usually found separately on website or something, but some are provided as by the disk on an unecrypted partition.
 In this chapter, we will look at several existing popular open-source tools that allow one to manage the encryption of disks.
@@ -16,7 +16,7 @@ In this chapter, we will look at several existing popular open-source tools that
 \section{hdparm}
  
 The \emph{hdparm}\footnote{\url{https://sourceforge.net/projects/hdparm}} tool provides a command line interface to control the parameters of ATA disks. Among others, this tool gives access to control ATA Security Feature Set.
-The examples of SED-relevant commands for the functionality described in subsection~\ref{subsection:enc_ata} are:
+The examples of SED-relevant commands for the functionality described in Subsection~\ref{subsection:enc_ata} are:
 \begin{itemize}
 \item Enable the ATA Security Feature Set:\\ \verb|hdparm --security-set-pass pwd /dev/sda|
 \item Disable ATA Security Feature Set:\\ \verb|hdparm --security-disable pwd /dev/sda|
@@ -32,9 +32,11 @@ A command to lock the drive is missing because a drive with an enabled ATA Secur
 
 \emph{sedutil}\footnote{\url{https://github.com/Drive-Trust-Alliance/sedutil}} is a tool for the management of SED disks maintained by the Drive Trust Alliance.
 It currently supports the Enterprise and Opal SSCs (and additionally the remaining Pyrite, Opalite and Ruby SSCs in a fork of the project\footnote{\url{https://github.com/ChubbyAnt/sedutil}}) and NVMe and SATA interfaces.
-Even though it is currently the most prominent open-source project to control SED disks, being exclusively\todo[color=green]{exclusively as it is the only one mentioned, not that it is not mentioned elsewhere..., hmmm , sounds fine i guess} used in guides for using SED on Linux, the code repository seems to be at the time of writing inactive.
 
-This tool does not use the Linux Opal ioctl interface and instead uses the approach described in the subsection \ref{direct_communication_raw_ioctl}. This allows the tool not only to be multi-platform but also to use the Opal features in their entirety instead of only the subset introduced in the Opal ioctl interface.
+Even though it is currently the most prominent open-source project to control SED disks, being exclusively used in guides for using SED on Linux, the code repository is inactive.\todo[color=green]{exclusively as it is the only one mentioned, not that it is not mentioned elsewhere..., hmmm , sounds fine i guess}
+
+
+This tool does not use the Linux Opal ioctl interface and instead uses the approach described in Section~\ref{section:direct_communication_raw_ioctl}. This allows the tool not only to be multi-platform but also to use the Opal features in their entirety instead of only the subset introduced in the Opal ioctl interface.
 % ... although there currently certain limits for e.g. having only one admin ...
 
 % Provides functionality to:
@@ -47,19 +49,17 @@ The tool offers the following commands, grouped by their functionality:
 \item \verb|printDefaultPassword| command prints the MSID password of the selected disk.
     \end{itemize}
     
-\begin{samepage}
     \item TPer management: \begin{itemize}
 \item \verb|initialSetup| command takes ownership of the disk, initializes the Locking SP and the global LR, and enables MBR.
 \item \verb|setSIDPassword| command changes the password of the SID authority.
 \item \verb|setAdmin1Pwd| command changes the password of the Locking SP's first admin authority. 
 \item \verb|setPassword| command changes the password of any supported Locking SP's authority.
     \end{itemize}
-\end{samepage}
     
     \item Locking range management: \begin{itemize}
 \item \verb|listLockingRange| command prints information about a single LR, such as the start, length or lock status.
 \item \verb|listLockingRanges| command prints information about all LRs, similar to the previous command \verb|listLockingRange|.
-\item \verb|rekeyLockingRange| command regenerates the selected LR's key, destroying the data in the LR in the process.
+\item \verb|rekeyLockingRange| command re-generates the selected LR's key, destroying the data in the LR in the process.
 \item \verb|setupLockingRange| command sets the start and length of the locking range.
 \item \verb|setLockingRange| command sets ReadLocked and WriteLock of the LR depending on the chosen configuration (read-write, read-only, or locked).
 \item \verb|enableLockingRange| command sets ReadLockEnabled and WriteLockEnabled of the LR. 
@@ -75,7 +75,7 @@ The tool offers the following commands, grouped by their functionality:
 \begin{samepage}
     \item Reverting the device: \begin{itemize}
 \item \verb|revertTPer| command reverts the TPer using the SID authority.
-\item \verb|yesIreallywanttoERASEALLmydatausingthePSID| command reverts the TPer using the PSID password.
+\item \verb|yesIreallywanttoERASEALLmydatausingthePSID| or the undocumented \verb|PSIDrevert| command reverts the TPer to factory state using the PSID password.
 \item \verb|revertNoErase| command reverts only the Locking SP, keeping the global range data.
     \end{itemize}
 \end{samepage}
@@ -83,7 +83,7 @@ The tool offers the following commands, grouped by their functionality:
     \item Enterprise-specific functionality\todo[color=green]{actually find out what the bands are first, seem like just locking ranges, but hard to find source, .... yea}: \begin{itemize}
 \item \verb|setBandsEnabled| command enables the usage of all locking ranges.
 \item \verb|setBandEnabled| command enables the usage of selected locking range.
-\item \verb|eraseLockingRange| command cryptographically erases data in a specified locking range.
+\item \verb|eraseLockingRange| command cryptographically erases the data in a specified locking range.
     \end{itemize}
 \end{itemize}
 
@@ -124,6 +124,7 @@ The tool offers the following commands, grouped by their functionality:
 Although it implements a CLI, its capabilities compared to sedutil are very limited, as can be seen from the following paragraphs. The CLI consists of three utilities: \verb|sedlockctl|, \verb|tcgdiskstat|, and \verb|tcgsdiag|. 
 For some of the tested disks, the utilities were not able to start a session due to time out and therefore function correctly.
 
+
 The \verb|sedlockctl| utility allows one to control a SED disk. At the time of writing it offers the following commands: \begin{itemize}
  \item \verb|list| command lists all LRs.
  \item \verb|lock-all| command locks all LRs.
@@ -163,9 +164,23 @@ When used with a device implementing Opal 1 SSC, the CLI tool reported ``SED con
 
 \section{fscrypt}
 
+Since inline encryption requires an active participation of the host during the encryption, a support in the kernel is required.
+This means that in order to provide inline encryption it is not enough to have a user space tool.
+
+\subsection{Kernel space library}
+
+In the upstream Linux, there exists a support for inline encryption. However, it is currently used only by the kernel space library \emph{fscrypt}.
+This library works on a filesystem level, which allows it to be more flexible compared to block device-level encryption, as it can limit the encryption to only some files. However, fscrypt does not encrypt all information of the files, and the metadata (excluding the filename) are left unencrypted.
+Although by default fscrypt uses software encryption, it is possible to switch to inline encryption.
+
+% The steps to activating inline encryption are described in more detail late in Chapter~\ref{chapter_tools}.
+% There also exists a user space application with the same name\footnote{\url{https://github.com/google/fscrypt}}, that can be used to control encryption of file systems using kernel space fscrypt.
+
+
+\subsection{User space tool}
 % TODO: test CLI fscrypt...
 
-\emph{fscrypt} is a tool for the management of Linux filesystem encryption. Although it does not provide explicit support for inline encryption, thanks to the kernel space library fscrypt providing inline encryption in a transparent way, it can still be used to manage file system encryption with inline encryption.
+\emph{fscrypt} is also the name of a user space tool for the management of Linux filesystem encryption. Although it does not provide explicit support for inline encryption, thanks to the kernel space library fscrypt providing inline encryption in a transparent way, it can still be used to manage file system encryption with inline encryption.
 
 % Even though the \emph{fscrypt} tool does not provide a way 
 % Since the kernel space library fscrypt provides inline encryption in a transparent way, it is possible to use it 
