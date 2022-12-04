@@ -135,7 +135,8 @@ institution={{Trusted Computing Group}}
 title = {{ATA Command Pass-Through}},
 year={2005},
 editor={Curtis E. Stevens},
-institution={T10}
+institution={T10},
+type={Standard}
 % https://www.t10.org/ftp/t10/document.04/04-262r8.pdf
 }
 
@@ -143,7 +144,9 @@ institution={T10}
 title = {{Information technology - ATA/ATAPI Command Set - 3 (ACS-3)}},
 % url = {...d2161r5-ATAATAPI_Command_Set_-_3.pdf},
 institution= {American National Standard of Accredited Standards Committee INCITS},
-year={2013}
+year={2013},
+editor={Weber, Ralph O.},
+type={Standard}
 }
 
 @techreport{spc-4,
@@ -232,7 +235,7 @@ year={2013}
 
  @article{got_hw_crypto,
   title={got HW crypto? On the (in)security of a Self-Encrypting Drive series},
-  author={Gunnar Alendal and Christian Kison and modg},
+  author={ Alendal,Gunnar and  Kison, Christian and modg},
   journal={IACR Cryptol. ePrint Arch.},
   year={2015},
   volume={2015},
@@ -243,15 +246,29 @@ year={2013}
 @inproceedings{bypassing_in_enterprise,
 title={Bypassing Self-Encrypting Drives (SED) in Enterprise Environments},
 author={Boteanu, Daniel and Fowler, Kevvie},
+booktitle    = {Black Hat},
 year={2015}
 }
 
 
 
 
-@techreport{verizon_dbir,
+% @techreport{verizon_dbir,
+% title={Verizon 2022 Data Breach Investigations Report},
+% year = {2022},
+% type={Report},
+% institution={Verizon}
+% }
+
+@unknown{verizon_dbir,
+% author = {Widup, Suzanne and Pinto, Alex and Hylender, David and Bassett, Gabriel and langlois, philippe},
+author = {Bassett, Gabriel and Hylender, C. David and Langlois, Philippe and Pinto Alex and Widup,  Suzanne},
+year = {2022},
+% month = {05},
+pages = {},
 title={Verizon 2022 Data Breach Investigations Report},
 year = {2022},
+type={Report},
 institution={Verizon}
 }
 
@@ -276,6 +293,7 @@ urldate     = {2022-11-27},
 @techreport{qualcomm_ice,
 title={Qualcomm® Inline Crypto Engine (UFS)},
 year={2021},
+type={Security policy},
 institution={{atsec information security}}
 }
 
@@ -283,7 +301,7 @@ institution={{atsec information security}}
 title={Protection Profile for Full Disk Encryption},
 subtitle={Mitigating the Risk of a Lost or Stolen Hard Disk},
 institution={Information Assurance Directorate},
+type={Protection profile},
 year={2011},
 version={1.0}
-
 }

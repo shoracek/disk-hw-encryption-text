@@ -171,9 +171,9 @@ ComPacket is the outermost one. Each ComPacket contains data for communication u
 \bitbox{1}{Call token} &
 \bitbox{8}{Invoking UID} \\ 
 \bitbox{8}{Method UID} &
-\bitbox{1}{Start List token} \\
+\bitbox{1}{\small Start List token} \\
 \bytefieldsetup{bitheight=2.5ex}%
-\wordbox[lrt]{1}{arguments} \\
+\wordbox[lrt]{1}{\vspace{3mm} arguments} \\
 \bytefieldsetup{bitheight=0ex}%
 \skippedwords \\
 \bytefieldsetup{bitheight=2.5ex}%
@@ -186,7 +186,7 @@ ComPacket is the outermost one. Each ComPacket contains data for communication u
 \bitbox{1}{Status Code} &
 \bitbox{1}{00} &
 \bitbox{1}{00} &
-\bitbox{1}{End List token}
+\bitbox{1}{\small End List token}
 \end{bytefield}
 
 \vspace{-86.6mm}\hspace*{-102mm} \small Byte:

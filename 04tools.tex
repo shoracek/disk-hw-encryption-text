@@ -145,10 +145,13 @@ The \verb|tcgsdiag| utility performs Level 0 and Level 1 Discovery, similar to s
 \section{TCGstorageAPI}
 
 Seagate's \emph{TCGstorageAPI}\footnote{\url{https://github.com/Seagate/TCGstorageAPI}} is a library that provides a Python interface and a CLI tool. Similarly to sedutil, it supports Opal and Enterprise SSCs.
-Compared to the previous tools, this one offers the most functionality, but this comes at the cost of also the largest dependencies. The tool has the most complete support for Enterprise SSC. % and also offers a unittest command. However, the unittest command 
+Compared to the previous tools, this one offers the most functionality, but this comes at the cost of also the largest dependencies. The tool has the most complete support for Enterprise SSC.
+The library also includes a command to test an implementation of Opal drive, although it is not as complete as the test cases published by TCG.
+
+% Something something something something something. something something something something. 
 
 When used with a device implementing Opal 1 SSC, the CLI tool reported ``SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script'', even though the device also implemented a supported Opal 2 SSC.
-\todo[color=green]{CLI: doesn't work with sdc "SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script", no random numbres}
+\todo[color=green]{CLI: doesn't work with sdc "SED configuration is Unknown/Unsupported (Type Opal) - Exiting Script", no random numbres} 
 
 % \todo{Provides a Python library, written in c++, and a CLI...}
 
@@ -158,7 +161,6 @@ When used with a device implementing Opal 1 SSC, the CLI tool reported ``SED con
 \todo[color=green]{offers test suite!!!}
 
 \section{sedcli}
-
 
 \emph{sedcli}\footnote{\url{https://github.com/sedcli/sedcli}} is a tool for managing SED devices. Although the only supported disk interface is NVMe and the only supported SSC is Opal, it offers support for the Key Management Interoperability Protocol and key management servers.
 
@@ -180,7 +182,7 @@ Although by default fscrypt uses software encryption, it is possible to switch t
 \subsection{User space tool}
 % TODO: test CLI fscrypt...
 
-\emph{fscrypt} is also the name of a user space tool for the management of Linux filesystem encryption. Although it does not provide explicit support for inline encryption, thanks to the kernel space library fscrypt providing inline encryption in a transparent way, it can still be used to manage file system encryption with inline encryption.
+\emph{fscrypt}\footnote{\url{https://github.com/google/fscrypt}} is also the name of a user space tool for the management of Linux filesystem encryption. Although it does not provide explicit support for inline encryption, thanks to the kernel space library fscrypt providing inline encryption in a transparent way, it can still be used to manage file system encryption with inline encryption.
 
 % Even though the \emph{fscrypt} tool does not provide a way 
 % Since the kernel space library fscrypt provides inline encryption in a transparent way, it is possible to use it 
