@@ -415,7 +415,8 @@ In order to take ownership of an Opal drive, there are several approaches define
 The system of authorities is further expanded upon by several feature sets.
 The following feature sets are mandated by the Opal standard.
 
-Physical Presence SID (PSID) is a special authority that is authorised to call only the Revert method. The PIN for this authority may not be found using the interface of the disk. Every one of our disks supplied this information on a label on the disk. This authority provides a way to reset the TPer into factory state even in case the SID PIN is lost~\cite{tcg-psid}.
+Physical Presence SID (PSID) is a special authority that is authorised to call only the Revert method. The PIN for this authority may not be found using the interface of the disk. 
+Each of the disks we tested, listed in Chapter~\ref{chapter:security}, supplied this information on a label on the disk. This authority provides a way to reset the TPer into factory state even in case the SID PIN is lost~\cite{tcg-psid}.
 
 Block SID Authentication feature disables SID authority until the device is powered on again. One of the possible use cases is by BIOS to protect a drive with default MSID~\cite{tcg-block-sid-auth}.
 
@@ -764,6 +765,12 @@ For NVMe drives, there exists the \verb|NVME_IOCTL_ADMIN_CMD| ioctl request to s
 
 For ATA drives, the situation is more complex. There does not exist an ATA command we could use to send the Opal commands.
 However, using the SCSI \verb|SG_IO| ioctl request with its \verb|sg_io_hdr_t| structure, we are able to use the ATA PASS-THROUGH command~\cite{ata_passthrough}. Using the ATA PASS-THROUGH command, we are able to send arbitrary ATA commands to the device, including the TRUSTED RECEIVE and TRUSTED SEND commands~\cite{acs-3} mapped to IF-RECV and IF-SEND respectively.
+
+Compared to NVMe drives, ATA drives require an extra setup. Before they can be successfully invoked,  it is necessary to first set the \verb|allow_tpm|\footnote{The usage of TPM in the name appears to be purely a historical blunder as it does not seem to be ever used for TPM, a cryptoprocessor standard defined by TCG, the same group defining TCG Storage standards.} flag of the kernel libATA library to allow Trusted Computing commands~\cite{acs-3}. This can be done by specifying it as a kernel flag \verb|libata.allow_tpm=1|\footnote{\url{https://wiki.archlinux.org/title/Self-encrypting_drives}}.
+Alternatively, SCSI commands may be used. However, some ATA drives may not support these commands.
+\todo[color=green]{where to find the instructions?, \url{https://wiki.archlinux.org/title/Self-encrypting_drives}}
+
+% Note that some of the the tools use ATA TRUSTED commands for managing ATA Opal devices. When using these commands,
 
 % There is no security send or receive command for 
 

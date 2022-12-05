@@ -1,10 +1,12 @@
 
-\chapter{Existing tools}
+\chapter{Existing tools for Linux}
 \label{chapter_tools}
 
 In order to give users the ability to manage their SED disks without the need to create their own programs to access existing interfaces, there exist several tools implementing the protocols introduced in Chapter~\ref{chapter_hardware_disk_encryption} and Chapter~\ref{chapter_opal}. 
 
-Note that some of the the tools use ATA TRUSTED commands for managing ATA Opal devices. When using these commands, it is necessary to first set the \verb|allow_tpm|\footnote{The usage of TPM in the name appears to be purely a historical blunder as it does not seem to be ever used for TPM, a cryptoprocessor standard defined by TCG, the same group defining TCG Storage standards.} flag of the kernel libATA library to allow Trusted Computing commands~\cite{acs-3}. This can be done either by specifying it as a kernel flag \verb|libata.allow_tpm=1|\footnote{\url{https://wiki.archlinux.org/title/Self-encrypting_drives}}.\todo[color=green]{where to find the instructions?, \url{https://wiki.archlinux.org/title/Self-encrypting_drives}}
+Note that some of the the tools use ATA TRUSTED commands for managing ATA Opal devices. When using these commands, it is important to perform the necessary setup, as described in Section~\ref{section:direct_communication_raw_ioctl}.
+
+% it is necessary to first set the \verb|allow_tpm|\footnote{The usage of TPM in the name appears to be purely a historical blunder as it does not seem to be ever used for TPM, a cryptoprocessor standard defined by TCG, the same group defining TCG Storage standards.} flag of the kernel libATA library to allow Trusted Computing commands~\cite{acs-3}. This can be done either by specifying it as a kernel flag \verb|libata.allow_tpm=1|\footnote{\url{https://wiki.archlinux.org/title/Self-encrypting_drives}}.\todo[color=green]{where to find the instructions?, \url{https://wiki.archlinux.org/title/Self-encrypting_drives}}
 
 % Some disks might provide their own software for their own proprietary hardware encryption. These are usually found separately on website or something, but some are provided as by the disk on an unecrypted partition.
 In this chapter, we will look at several existing popular open-source tools that allow one to manage the encryption of disks.
@@ -162,18 +164,23 @@ When used with a device implementing Opal 1 SSC, the CLI tool reported ``SED con
 
 \section{sedcli}
 
-\emph{sedcli}\footnote{\url{https://github.com/sedcli/sedcli}} is a tool for managing SED devices. Although the only supported disk interface is NVMe and the only supported SSC is Opal, it offers support for the Key Management Interoperability Protocol and key management servers.
+\emph{sedcli}\footnote{\url{https://github.com/sedcli/sedcli}} is a tool for managing SED devices. Although the only supported disk interface is NVMe and the only supported SSC is Opal, it aims to support the Key Management Interoperability Protocol and key management servers, allowing for remote key storage.
 
 \section{fscrypt}
 
-Since inline encryption requires an active participation of the host during the encryption, a support in the kernel is required.
-This means that in order to provide inline encryption it is not enough to have a user space tool.
+Compared to the previously mentioned SED solutions, \emph{fscrypt} offers support for inline encryption instead. This allows it to be more flexible and provide filesystem-level encryption.
+Since inline encryption, and especially filesystem-level encryption, require an active participation of the host during the encryption, support in the kernel is required in addition to the user space tool.
+In the case of fscrypt, the kernel support is provided by a kernel library also called fscrypt.
+% Compared to the device-level encryption it is able to limit the encryption to only some files.
+% \emph{fscrypt} is the name of a user space tool and kernel library. Together, they offer a way to provide a filesystem level encryption
+% This means that in order to provide inline encryption, it is not enough to have only a user space tool.
+% This is why there is fscrypt the kernel library and fscrypt the user space tool.
 
 \subsection{Kernel space library}
 
-In the upstream Linux, there exists a support for inline encryption. However, it is currently used only by the kernel space library \emph{fscrypt}.
-This library works on a filesystem level, which allows it to be more flexible compared to block device-level encryption, as it can limit the encryption to only some files. However, fscrypt does not encrypt all information of the files, and the metadata (excluding the filename) are left unencrypted.
-Although by default fscrypt uses software encryption, it is possible to switch to inline encryption.
+The fscrypt kernel library is currently the only kernel space library providing support for inline encryption, although, by default, it uses software encryption.
+This library works on a filesystem level, which allows it to be more flexible compared to block device-level encryption, as it can limit the encryption to only some files. However, fscrypt does not encrypt all information of the files, and the metadata (excluding the filename) are left unencrypted.% In the upstream Linux, there exists a support for inline encryption. However, it is currently used only by the kernel space library \emph{fscrypt}.
+% Although by default fscrypt uses software encryption, it is possible to switch to inline encryption.
 
 % The steps to activating inline encryption are described in more detail late in Chapter~\ref{chapter_tools}.
 % There also exists a user space application with the same name\footnote{\url{https://github.com/google/fscrypt}}, that can be used to control encryption of file systems using kernel space fscrypt.
@@ -182,7 +189,7 @@ Although by default fscrypt uses software encryption, it is possible to switch t
 \subsection{User space tool}
 % TODO: test CLI fscrypt...
 
-\emph{fscrypt}\footnote{\url{https://github.com/google/fscrypt}} is also the name of a user space tool for the management of Linux filesystem encryption. Although it does not provide explicit support for inline encryption, thanks to the kernel space library fscrypt providing inline encryption in a transparent way, it can still be used to manage file system encryption with inline encryption.
+The user space tool fscrypt\footnote{\url{https://github.com/google/fscrypt}} allows one to manage Linux filesystem encryption. Although it does not explicitly support inline encryption, thanks to the kernel space library fscrypt providing inline encryption in a transparent way, it can still be used to manage file system encryption with inline encryption.
 
 % Even though the \emph{fscrypt} tool does not provide a way 
 % Since the kernel space library fscrypt provides inline encryption in a transparent way, it is possible to use it 

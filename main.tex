@@ -23,12 +23,16 @@ We described several state-of-the-art attacks relevant to hardware disk encrypti
 We have introduced several popular tools for managing hardware disk encryption and presented our own toolset. 
 Using the tools from this toolset, we managed to find a vulnerability in the generation of keys, and finally, we used it to compare the capabilities of several Opal-compliant disks. 
 
-% And finally we have provided an overview on attacks on such devices and their feasibility.
 
 As can be easily seen from the results presented in Chapter~\ref{chapter:security} and Chapter~\ref{chapter:data},
 even though hardware disk encryption presents many advantages over classic software encryption, today's implementations have flaws. Although most of the attacks require physical access, this is not unthinkable, as disks are often stolen.
-For some of the attacks, none of the disks provided a way to prevent them, even though a solution exists in the form of optional features. For those features that were required by the standard and implemented by the disks, some disks did not provide a working implementation. Between these bad implementations, there were even some malign ones, such as a disk not informing about setting an invalid value and even reporting the value as changed or a disk with a problematic generation of random values.
+For some of the attacks, none of the disks provided a way to prevent them, even though a solution exists in the form of optional features. For those features that were required by the standard and implemented by the disks, 
+such as reporting of GUDID or reporting of the number of template instances,
+some disks did not provide a working implementation. Between these bad implementations, there were even some malign ones, such as a disk not informing about setting an invalid value and even reporting the value as changed or a disk with a problematic generation of random values.
 As such, it may be easy to see the reluctance of some to trust hardware disk encryption and opt for software solutions instead.
+
+% And finally we have provided an overview on attacks on such devices and their feasibility.
+
 
 \section{Future work}
 
