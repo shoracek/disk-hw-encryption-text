@@ -66,7 +66,7 @@ However, the Opal standard does not mandate secure messaging and the only author
 \section{Attack on key generation}
 \label{attack_rng}
 
-Attacks on key generation are such attacks which abuse the RNG generating data with low entropy or even entirely predictable. Due to the decreased entropy, it may be possible to potentially predict the value of the DEK~\cite{self_encrypting_deception}.
+An attack on key generation is such an attack which abuses the RNG generating data with low entropy or even entirely predictable. Due to the decreased entropy, it may be possible to potentially predict the value of the DEK~\cite{self_encrypting_deception}.
 % Such vulnerabilities are not unprecedented. \cite{got_hw_crypto}
 Since Opal specification does not actually specify any implementation for the RNG, we cannot perform any fruitful analysis of the standard itself. However, we can still try to perform practical analysis.
 

@@ -769,7 +769,7 @@ The individual implemented ioctl requests for Opal functionality and their funct
 %(??? What did i mean by this?... anyway this is entry point for some vulnerability analysis because it basically gives us back the cold boot attack!).
 \item \verb|LOCK_UNLOCK| command locks or unlocks reading or writing for the selected locking range.
 \item \verb|TAKE_OWNERSHIP| command takes ownership over the device. In other words, it changes the admin authority password from the default MSID to the selected one. \todo[color=green]{write about the initialisation of the TPer to the generic chapter, C\_PIN\_MSID etc.}
-\item \verb|ACTIVATE_LSP| command changes state from Manufactured-Inactive to Manufactured state, enabling its usage. Additionally, it can also facilitate the setup of Single User Mode. \todo[color=green]{write about TPer states in the generic chapter. }
+\item \verb|ACTIVATE_LSP| command changes the state of Locking SP from Manufactured-Inactive to Manufactured state, enabling its usage. Additionally, it can also facilitate the setup of Single User Mode. \todo[color=green]{write about TPer states in the generic chapter. }
 \item \verb|SET_PW| command changes the password of the selected Locking SP authority using the admin password.
 \item \verb|ACTIVATE_USR| command enables the specified user in the Opal tables.
 \item \verb|REVERT_TPR| command reverts the TPer to the factory state using the SID authority.
