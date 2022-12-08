@@ -1,3 +1,5 @@
+
+
 \chapter{Opal toolset}
 
 \todo[color=green]{implement proof-of-concept low-level tools to access available devices,}
@@ -14,7 +16,7 @@ The lowest level is focused on the abstraction of the communication primitives. 
 
 % The middle level implements entire functions, like setup tper... 
 
-The middle level joins the lower-level methods into complete functions. Each function represents one of the methods and provides a C interface to invoking the method. Internally the functions start a session with the device, build the method according to the function's arguments, send the method to the device, retrieve the response, and parse the response, to find whether to command was successful and to potentially return the data to the caller.
+The middle level joins the lower-level methods into complete functions. Each function represents one of the methods and provides a C interface to invoke the method. Internally the functions start a session with the device, build the method according to the function's arguments, send the method to the device, retrieve the response, and parse the response to find whether to command was successful and to potentially return the data to the caller.
 
 Finally, the top level combines the two previous levels to create a usable front end usable through a command line.
 
@@ -41,7 +43,7 @@ The utility serves as a wrapper around the middle-level functions described earl
 As of right now, the utility provides access to the following commands:
 
 \begin{itemize}
-    \item \verb|psid_revert| command performs PSID revert using the Revert method as the PSID authority~\cite{tcg-psid}, resetting the device into the manufactured state.
+    \item \verb|psid_revert| command performs PSID revert using the Revert method as the PSID authority~\cite{tcg-psid}, resetting the device into the factory state.
     \item \verb|setup_tper| command takes ownership of the TPer by setting the password of the SID authority to the chosen value.\todo{(also enables programmatic reset, but that's to change, ... maybe)}
     \item \verb|setup_user| command enables Locking SP's user authority and sets its password.
     \item \verb|setup_range| command enables the locking range and sets up its ReadLocked and WriteLocked ACL and its other parameters, such as the range of the locking range, ReadLockEnabled, and WriteLockEnabled.
@@ -49,20 +51,20 @@ As of right now, the utility provides access to the following commands:
     \item \verb|reset| command sends the TPER\_RESET command to the device~\cite{tcg-storage-core}.
 \end{itemize}
 
-An example of usage of the \verb|control| utility can be seen in the Figure~\ref{fig:control_output}, where we present a basic use case scenario.
+An example of usage of the \verb|control| utility can be seen in Figure~\ref{fig:control_output}, where we present a basic use case scenario.
 
-    \begin{lstlisting}[language=bash,caption={Usage of the \texttt{control} utility},label={fig:control_output}]
-# Reset device to the factory state.
+    \begin{lstlisting}[language=bash,caption={Usage of the \texttt{control} utility},label={fig:control_output},keywordstyle=\color{black}]
+# Reset the device to the factory state.
 ./control psid_revert /dev/sda                 \
-    --verify-pin $PSID
+    --verify-pin ${PSID}
 # Take ownership over the device.
 ./control setup_tper /dev/sda                  \
     --assign-pin 0000
-# Create user authority.
+# Create a user authority.
 ./control setup_user /dev/sda                  \ 
     --user 1 --verify-pin 0000                 \
     --assign-pin 1111
-# Create locking range.
+# Create a locking range.
 ./control setup_range /dev/sda                 \ 
     --locking-range 1                          \
     --locking-range-start 0                    \
@@ -90,14 +92,14 @@ The Level 2 Discovery, on the other hand, is more complicated.
 % This modified version will try to include every table in the TPer.
 For Level 2 Discovery, we would like to include as many tables as possible. The Opal standard defines the mandatory and optional tables, yet we would like to include also any table that is vendor specific.
 We also have a few limiting factors that may limit the number of tables we will be able to read.
-First of all, we do not want to change the state of the device. This includes actions such as reverting the device to the manufactured state or taking ownership of it. Even if the state is potentially reversible without data loss, the risk of the disk not working correctly surpasses the potential gain from more information. This might notably affect the collection of information from the Locking SP if it is not activated
+First of all, we do not want to change the state of the device. This includes actions such as reverting the device to the factory state or taking ownership of it. Even if the state is potentially reversible without data loss, the risk of the disk not working correctly surpasses the potential gain from more information. This might notably affect the collection of information from the Locking SP if it is not activated
 % ...e.g. tables of locking SP might be unavailable if it was not activated (but the SP will still be mentioned in the SP table of Admin SP).
 Another requirement is that no authorisation should be required. Instead, we will use the password-less Anybody authority. This again restricts the set of tables that are accessible. However, according to the definitions of access rights in the Opal standard~\cite{tcg-opal2}, this mainly affects secrets, such as passwords of Authorities or DEKs, and the current configuration of locking ranges, such as their start and length. Such information does not speak about the properties and capabilities of the device itself.
 
 \subsection{Implementation of disk properties discovery}
 
 The process we use in order to print the contents of every table is as follows:
-Firstly we iterate using the Next method over the SP table of the Admin SP to get a list of existing SPs. As long as the Admin SP is not frozen or disabled, this should always succeed since the Admin SP is in the manufactured state by default, and its SP table is always accessible by the Anybody authority. 
+Firstly we iterate using the Next method over the SP table of the Admin SP to get a list of existing SPs. As long as the Admin SP is not frozen or disabled, this should always succeed since the Admin SP is in the factory state by default, and its SP table is always accessible by the Anybody authority. 
 With the list of SPs, we now may successively iterate using the Next method over the SPs and, for every one of them, get a list of their tables from the Table table, the same way we did with the SP table. The Table table is again always accessible by the Anybody authority.
 We then go through the found tables and try to get a list of their rows using the Next method. If this succeeds, we can then use the Get method to get each row of the table. However, some of the tables do not implement the Next method. This means that if we want to get the information from the rows of such tables, we have to guess the UIDs of the rows. Since each table can have up to $2^{32}$ sparsely distributed rows, simply iterating over all possible values is out of the question. In those cases, we only guess that a row with the lowest possible UID might exist and try to read information from it.
 
@@ -110,6 +112,9 @@ parse only the outermost ones. This means that, for example, for lists, we print
 % print it surrounded by square brackets if list
 % print it as bytes if the outermost is bytes
 % otherwise just print the bytes
+
+
+
 \begin{figure}
     \centering
 \begin{lstlisting}[language=Python]
@@ -129,7 +134,31 @@ parse only the outermost ones. This means that, for example, for lists, we print
     "0x03": "0x0000000000000000",
 # Kind = Object
     "0x04": "0x01",
+...
 \end{lstlisting}
+    \caption{Excerpt of \texttt{discovery} output from Kingston KC600. Comments were added for clarity.}
+    \label{fig:discovery_example}
+\end{figure}
+
+
+An example of the output of this process can be seen in Figure~\ref{fig:discovery_example}. Depicted there is a part of the output of this utility containing the start of the Table table's first row. The nested structure contains the outermost key corresponding to the Admin SP, followed by a key for the Table table and a key for its first row. 
+This first row holds metadata about the Table table, such as its name or the template that provides this table.
+
+\todo{maybe use better example? where the common name is not used}
+
+% , containing self-reference, can be seen. % and the Anybody ACE.
+
+
+
+
+
+
+\todo{wtf, maybe just choose a different row....., are the comments I added better?, add some text that te comments are not part of the output though...}
+\todo{reword so that the figure is inline... looks nicer :)}
+
+
+
+
 
 %    "0x0000000800000001": {
 %     "0x00": "0x0000000800000001",
@@ -139,12 +168,10 @@ parse only the outermost ones. This means that, for example, for lists, we print
 %     "0x04": "[]"
 %    },
 % ...
-    \caption{Excerpt of \texttt{discovery} output from Kingston KC600. Comments were added for clarity.}
-    \label{fig:discovery_example}
-\end{figure}
 
-An example of part of the output of this process can be seen in Figure~\ref{fig:discovery_example}\todo{maybe use better example? where the common name is not used}. Depicted there is a part of the output of this utility containing the start of the Table table's first row. The nested structure with the outermost key corresponding to the Admin SP, followed by keys for the Table table and the row of the Table table for the Table table\todo{wtf, maybe just choose a different row....., are the comments I added better?, add some text that te comments are not part of the output though...}, can be seen. % and the Anybody ACE.
-\todo{reword so that the figure is inline... looks nicer :)}
+
+
+
 % something about how we don't translate the types during printing ...
 
 % iterate over each table to get either list of rows in that table or try to guess that the first row will contain information

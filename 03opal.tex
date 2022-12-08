@@ -35,7 +35,7 @@ Other than the Core and SSC standards defining the fundamentals of the devices, 
 the Additional DataStore~\cite{tcg-additional-datastore}, providing storage for arbitrary data,
 the Block SID Authentication~\cite{tcg-block-sid-auth}, allowing to disable the owner's authority until a power cycle,
 the PSK Secure Messaging~\cite{tcg-psk-secure-messaging}, providing secure communication between the host and the device using a pre-shared key,
-the PSID~\cite{tcg-psid}, defining a way to reset the device into the manufactured state,
+the PSID~\cite{tcg-psid}, defining a way to reset the device into the factory state,
 or the Single User Mode~\cite{tcg-sum}.
 However, we will focus primarily on those that are mandatory in the Opal specification.
 Finally, there are also other expanding standards, such as the Storage Interface Interactions Specification (SIIS)~\cite{tcg-siis}, describing the mapping of secure commands used by TCG devices to commands of specific disk interfaces and reset types, or the Secure Messaging addendum~\cite{tcg-secure-messaging-addendum}, describing TLS-based secure communication between the host and the device.
@@ -386,16 +386,60 @@ In order to keep information about the state and the working capacity of an SP, 
 \item \emph{Issued-Failed} state describes SP after a fatal failure from which it cannot recover.
 \end{itemize}
 
+
 \subsection{SP Issuance}
 
 SP issuance is the process of creating a new SP from the Base Template and a set of other templates. This is achieved by calling the Admin SP's method IssueSP. After an SP is issued, it can be personalised. Personalisation of an SP is the process of creating new tables (using the method CreateTable), filling in existing tables (using methods CreateRow and Set), and setting up access control (using the method AddACE).
 
 \subsection{Life cycles in Opal}
 
-Opal standard~\cite{tcg-opal2} extends the states defined in the Core specification with a new set of life cycle states: Manufactured-Inactive, Manufactured, Manufactured-Failed, Manufactured-Disabled, Manufactured-Disabled-Frozen, Manufactured-Disabled. Each of these new states mirrors the corresponding ``issued'' state from the Core specification. Compared to the ``issued'' states, the ``manufactured'' states are created during manufacturing by the manufacturer instead of during the subsequent use by the TPer owner. This is reflected by the fact that these manufactured SPs are not issued and deleted in Opal. Instead, they are activated and reverted. Activation automates the personalisation using hardcoded, preconfigured values. Reverting SP maintains its existence, returning it to the factory state instead. Note that this means that the Manufactured-Inactive corresponds to the Nonexistent state.
+Opal standard~\cite{tcg-opal2} extends the states defined in the Core specification with a new set of life cycle states: Manufactured-Inactive, Manufactured, Manufactured-Failed, Manufactured-Disabled, Manufactured-Disabled-Frozen, Manufactured-Disabled. Each of these new states mirrors the corresponding ``issued'' state from the Core specification. Compared to the ``issued'' states, the ``manufactured'' states are created during manufacturing by the manufacturer instead of during the subsequent use by the TPer owner. This is reflected by the fact that these manufactured SPs are not issued and deleted in Opal. Instead, they are activated and reverted. Activation automates the personalisation using hardcoded, preconfigured values. Reverting SP maintains its existence, returning it to the factory state instead. Note that this means that the Manufactured-Inactive corresponds to the Nonexistent state. The graphical representation of the states and their transitions can be seen in Figure~\ref{fig:life_cycle_opal}.
+
+
+\begin{figure}
+    \centering
+
+
+\begin{tikzpicture}[node distance={20mm}, main/.style = {draw, rectangle}, edge/.style = {}]
+% \node[main] (M) [below left=10mm and 5mm of MI] {Manufactured};
+\node[main] (M) {Manufactured};
+\node[main] (MI) [above=10mm of M] {Manufactured-Inactive};
+\node[main] (MX) [below=10mm of M] {Manufactured-Failed};
+\node[main] (MDF) [left=10mm and 5mm of M] {Manufactured-Disabled-Frozen};
+\node[main] (MF) [below=10mm of MDF] {Manufactured-Frozen};
+\node[main] (MD) [above=10mm of MDF] {Manufactured-Disabled};
+
+\draw[edge,->] (MI) -- (M);
+
+\draw[edge,->] (M) edge [loop right] (M);
+\draw[edge,->] (M) edge (MX);
+\draw[edge,<->] (M) edge (MF);
+\draw[edge,<->] (M) -- (MD);
+
+\draw[edge,<->] (MD) -- (MDF);
+% \draw[->] (MD) edge [bend right] (MX);
+\draw[edge,-] (MD) -> (-8.5, 1.6);
+
+% \draw[->] (MDF) edge [bend right] (MX);
+\draw[edge,->] (MDF) -> (-8.5, 0);
+
+% \draw[->] (MF) -- (MX);
+\draw[edge,->] (MF) -> (-8.5, -1.6);
+
+\draw[edge,-] (-8.5, 1.6) edge (-8.5, -2.2);
+\draw[edge,-] (-8.5, -2.2) edge (0, -2.2);
+\draw[edge,->] (0, -2.2) -> (MX);
+
+\end{tikzpicture}
+
+
+
+
+    \caption{Opal life cycle states~\cite{tcg-opal2}}
+    \label{fig:life_cycle_opal}
+\end{figure}
 
 \subsection{Taking ownership}
-
 
 In order to take ownership of an Opal drive, there are several approaches defined in the Opal standard~\cite{tcg-opal2}. The most frequent approach is for the device to store the default PIN of the SID\todo[color=green]{this is introduced later in access control chapter...., that chapter is before this now} authority, called MSID, in a table accessible without any credentials. This allows anyone to read the default PIN, authenticate themselves as the SID authority, and change the PIN. However, the process of taking ownership is not required in any way, and the drive will function as expected even if the PIN remains unchanged.
 \todo[color=green]{this doesn't really belong here, but where would i belong?, nah i think it's fine}
@@ -512,7 +556,7 @@ Even though the Core standard defines several templates, Opal does not mandate t
 
 Admin SP is one of the two SPs mandated by the Opal standard~\cite{tcg-opal2}. It is a unique SP which holds information about the TPer and all the present SPs. It allows the creation, deletion and general modification of the SPs.
 It is created from the Base and the Admin Template.
-This SP is initialised in the ``manufactured'' state so that it can function as a starting point of TPer management. 
+This SP is initialised in the Manufactured state so that it can function as a starting point of TPer management. 
 
 The description of methods and tables that follows is specific for Opal SSC and may be different for other SSCs. 
 
@@ -725,17 +769,17 @@ The individual implemented ioctl requests for Opal functionality and their funct
 %(??? What did i mean by this?... anyway this is entry point for some vulnerability analysis because it basically gives us back the cold boot attack!).
 \item \verb|LOCK_UNLOCK| command locks or unlocks reading or writing for the selected locking range.
 \item \verb|TAKE_OWNERSHIP| command takes ownership over the device. In other words, it changes the admin authority password from the default MSID to the selected one. \todo[color=green]{write about the initialisation of the TPer to the generic chapter, C\_PIN\_MSID etc.}
-\item \verb|ACTIVATE_LSP| command changes state from ``Manufactured-Inactive'' to ``Manufactured'' state. Additionally, it can also facilitate the setup of Single User Mode. \todo[color=green]{write about TPer states in the generic chapter. }
+\item \verb|ACTIVATE_LSP| command changes state from Manufactured-Inactive to Manufactured state, enabling its usage. Additionally, it can also facilitate the setup of Single User Mode. \todo[color=green]{write about TPer states in the generic chapter. }
 \item \verb|SET_PW| command changes the password of the selected Locking SP authority using the admin password.
 \item \verb|ACTIVATE_USR| command enables the specified user in the Opal tables.
-\item \verb|REVERT_TPR| command reverts the TPer to the manufactured state using the SID authority.
+\item \verb|REVERT_TPR| command reverts the TPer to the factory state using the SID authority.
 \item \verb|LR_SETUP| command sets the position of LR and enables or disables the locking of reading or writing for that LR.
 \item \verb|ADD_USR_TO_LR| command sets the ACE for locking and unlocking to the designated user. Contrary to the name, this request does not actually add a user and instead replaces any existing one with the new one. % adds a user to the LR ACE. ...\verb|l_state == OPAL_RW| means writing ace...  (TODO: they seem to set it to "\verb#(user_uid || user_uid)#"??? why? bug? -> MRE is \verb|opal_util_linux.c|, only used last assigned to LR can control it, does (not) work on all test disks
 \item \verb|ENABLE_DISABLE_MBR| command changes the \verb|Enable| column of the \verb|MBRControl| table. % TODO: write about MBR in a generic chapter.
 \item \verb|ERASE_LR| command calls the erase method defined in Single User Mode Feature Set~\cite{tcg-sum}. This method not only destroys the data in the locking range but also resets the assigned user authority of the locking range and the user's password. This is required since a Single User Mode protects these values from change by authorities other than the assigned user.
 % calls the erase method, 00 00 06 00 00 08 03, can't find it in Opal and in core it's "reserved for SSC", ... it's in single user mode standard --- not only destroys data, also removes pin and user authority (for SUM).
 \item \verb|SECURE_ERASE_LR| command re-generate the data encryption key of a range to destroy the previous one.
-\item \verb|PSID_REVERT_TPR| command resets the TPer to the manufactured state using PSID.
+\item \verb|PSID_REVERT_TPR| command resets the TPer to the factory state using PSID.
 \item \verb|MBR_DONE| command changes \verb|Done| column of the \verb|MBRControl|. % only when both the \verb|Done| and \verb|Enable| parameters are enabled, MBR shadowing is active.
 \item \verb|WRITE_SHADOW_MBR| command writes data into the MBR table.
 \item \verb|GENERIC_TABLE_RW| command reads a byte table or writes it into a byte table. Neither object tables nor iteration is supported.

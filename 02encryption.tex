@@ -58,7 +58,7 @@ In the following sections of this chapter, we will further describe two types of
 
 \section{Self-encrypting drives}
 
-\emph{Self-encrypting drive} (SED) is a storage device with built-in disk encryption hardware~\cite{tcg-use-case-white-paper}. Having built-in disk encryption hardware enables the disk to encrypt the incoming data and decrypt the outgoing data automatically. 
+\emph{Self-encrypting drive} (SED)~\cite{tcg-use-case-white-paper} is a storage device with built-in disk encryption hardware. Having built-in disk encryption hardware enables the disk to encrypt the incoming data and decrypt the outgoing data automatically. 
 The data saved on the disk is protected two-fold: by access control and by encryption.
 Access control denies input/output operations until the host is authorised.
 Encryption protects the device even from attacks with physical access, where the access control could be bypassed.
@@ -97,7 +97,7 @@ It offers commands to set a password, unlock the disk, erase the data on the dis
 
 In order to authenticate to the disk, there are two passwords, the Master password, initially set by the manufacturer, and the User password.
 The usage of the Master password to unlock or disable the security can be disabled by setting the Master Password Capability bit while setting the User password. Even if the Master password is disabled for unlocking the disk or disabling the locking, it can still be used for erasing the disk.
-The disk protection is enabled by setting the User password. After the device is turned on again, the device is locked and to access the data on the disk or use some of the ATA commands, it needs to be unlocked by providing a password using the unlock command. By disabling the User password, the protection of the device can be disabled.
+The disk protection is enabled by setting the User password. After the device is turned on again, the device is locked and to access the data on the disk or use some of the ATA commands, and it needs to be unlocked by providing a password using the unlock command. By disabling the User password, the protection of the device can be disabled.
 
 However, the ATA Security Feature Set itself does not provide encryption of the data saved on the disk, only access control.
 Nevertheless, some of the SED solutions use ATA Security commands as their interface to provide access to their own implementation of the disk encryption and disk unlocking~\cite{self_encrypting_deception}.
@@ -121,17 +121,20 @@ An example of such are disks from Western Digital's My Passport and My Book seri
 
 \section{Inline encryption hardware}
 
-Compared to the previously described self-encrypting drives, inline encryption hardware is separated and independent from the disk. Inline encryption hardware is similar to classic cryptographic accelerators. However, inline encryption hardware, instead of using the same memory for input and output data, optimises the input/output process by writing and reading the data directly to and from the disk~\cite{linux-doc-inline}.
+Compared to the SEDs described earlier, \emph{inline encryption hardware}~\cite{linux-doc-inline} is separated and independent from the disk. Inline encryption hardware is similar to classic cryptographic accelerators. However, instead of using the same memory for input and output data, inline encryption hardware optimises the input/output process by writing and reading the data directly to and from the disk.
 
 Inline encryption hardware shares several of SEDs advantages, such as reduced power consumption, reduced CPU usage, or increased performance, compared to purely software encryption.
-However, unlike SEDs, inline encryption devices usually do not have any access control or authentication capabilities. Instead, they allow one to simply insert a DEK into a keyslot, select a keyslot, and remove a DEK from a keyslot. The data passing through the inline encryption device to the disk is then encrypted using the DEK from the selected key slot. Similarly, data passing from the disk are decrypted by the inline encryption hardware.\todo{IV is also included}
-Since key management is entirely in control of the host system, which has knowledge of the file system mapping, inline encryption can be used not only for block-level encryption but also for filesystem-level encryption. But this flexibility has a downside in that the host needs to actively control the encryption.
+However, unlike SEDs, inline encryption devices usually do not have any access control or authentication capabilities. Instead, they allow one to simply insert a DEK into a keyslot, select a keyslot and IV, and remove a DEK from a keyslot. The data passing through the inline encryption device to the disk is then encrypted using the DEK from the selected keyslot. Similarly, data passing from the disk are decrypted by the inline encryption hardware.
+Since key management is entirely in control of the host system, which has knowledge of the file system mapping, inline encryption can be used not only for block-level encryption but also for filesystem-level encryption. Nevertheless, this flexibility has a downside in that the host needs to actively control the encryption.
 
-An example of inline encryption hardware standard is the Qualcomm Inline Crypto Engine~\cite{qualcomm_ice}\todo[color=green]{\href{https://csrc.nist.gov/CSRC/media/projects/cryptographic-module-validation-program/documents/security-policies/140sp3124.pdf}{some NIST document} or maybe \href{https://android.googlesource.com/kernel/msm.git/+/android-msm-bullhead-3.10-n-preview-1/Documentation/crypto/msm/msm_ice_driver.txt}{some android kernel source}} used by some Android devices.
+An example of an inline encryption hardware standard is the Qualcomm Inline Crypto Engine~\cite{qualcomm_ice} used by some Android devices.
+
+\todo[color=green]{\href{https://csrc.nist.gov/CSRC/media/projects/cryptographic-module-validation-program/documents/security-policies/140sp3124.pdf}{some NIST document} or maybe \href{https://android.googlesource.com/kernel/msm.git/+/android-msm-bullhead-3.10-n-preview-1/Documentation/crypto/msm/msm_ice_driver.txt}{some android kernel source}}
 % , both currently supported by the Kernel engine
 
 % basically just allows the user to insert keys in and works as a "filter" of the input/output of disk.
 
+\todo{IV is also included}
 \todo{something about how it actually provides a way to check the encrypted content, right? Seems to be primarily in android , source? Find how much inline enc hardware there really is }
 
 
