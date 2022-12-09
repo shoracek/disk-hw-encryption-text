@@ -53,20 +53,20 @@ The tool offers the following commands, grouped by their functionality:
     \end{itemize}
     
     \item TPer management: \begin{itemize}
-\item \verb|initialSetup| command takes ownership of the disk, initialises the Locking SP and the global LR, and enables MBR.
+\item \verb|initialSetup| command takes ownership of the disk, initialises the Locking SP and the global locking range, and enables MBR.
 \item \verb|setSIDPassword| command changes the password of the SID authority.
 \item \verb|setAdmin1Pwd| command changes the password of the Locking SP's first admin authority. 
 \item \verb|setPassword| command changes the password of any supported Locking SP's authority.
     \end{itemize}
     
     \item Locking range management: \begin{itemize}
-\item \verb|listLockingRange| command prints information about a single LR, such as the start, length or lock status.
-\item \verb|listLockingRanges| command prints information about all LRs, similar to the previous command \verb|listLockingRange|.
-\item \verb|rekeyLockingRange| command re-generates the selected LR's key, destroying the data in the LR in the process.
+\item \verb|listLockingRange| command prints information about a single locking range, such as the start, length or lock status.
+\item \verb|listLockingRanges| command prints information about all locking ranges, similar to the previous \verb|listLockingRange| command.
+\item \verb|rekeyLockingRange| command re-generates the selected locking range's key, destroying the data within it in the process.
 \item \verb|setupLockingRange| command sets the start and length of the locking range.
-\item \verb|setLockingRange| command sets ReadLocked and WriteLock of the LR depending on the chosen configuration (read-write, read-only, or locked).
-\item \verb|enableLockingRange| command sets ReadLockEnabled and WriteLockEnabled of the LR. 
-\item \verb|disableLockingRange| command unsets ReadLockEnabled and WriteLockEnabled of the LR. 
+\item \verb|setLockingRange| command sets ReadLocked and WriteLock of the locking range depending on the chosen configuration (read-write, read-only, or locked).
+\item \verb|enableLockingRange| command sets ReadLockEnabled and WriteLockEnabled of the locking range. 
+\item \verb|disableLockingRange| command unsets ReadLockEnabled and WriteLockEnabled of the locking range. 
     \end{itemize}
     
     \item Shadow MBR management: \begin{itemize}
@@ -107,12 +107,12 @@ The tool offers the following commands, grouped by their functionality:
 % \verb|setAdmin1Pwd| changing password of Locking SP's first admin authority, 
 % and \verb|setPassword| changing the password of any Locking SP's authority.
 
-% For management of LRs there commands
-% \verb|listLockingRanges| prints information about all LRs,
-% \verb|listLockingRange| prints information about a single LR,
-% \verb|rekeyLockingRange| regenerates the LR's key (destroying the data in the LR in the process)
+% For management of locking ranges there commands
+% \verb|listLockingRanges| prints information about all locking ranges,
+% \verb|listLockingRange| prints information about a single locking range,
+% \verb|rekeyLockingRange| regenerates the locking range's key (destroying the data in the locking range in the process)
 % \verb|setupLockingRange| sets the start and length of locking range,
-% \verb|setLockingRange| sets read locked and write locked of the LR, and
+% \verb|setLockingRange| sets read locked and write locked of the locking range, and
 % \verb|disableLockingRange| and \verb|enableLockingRange| reading/writing locking enabled, 
 
 
@@ -123,7 +123,7 @@ The tool offers the following commands, grouped by their functionality:
 % \verb|yesIreallywanttoERASEALLmydatausingthePSID| reverts the TPer using the PSID password, 
 % and \verb|revertNoErase| reverts only the Locking SP, keeping the global range data.
 
-% TCG Enterprise specific functionality, replaces LRs???? not really???, the use bands and bandmasters and erasemasters.
+% TCG Enterprise specific functionality, replaces locking ranges???? not really???, the use bands and bandmasters and erasemasters.
 % \verb|setBandsEnabled|
 % \verb|setBandEnabled|
 % \verb|eraseLockingRange| 
@@ -138,9 +138,9 @@ For some of the tested disks, the utilities were not able to start a session due
 
 
 The \verb|sedlockctl| utility allows one to control a SED disk. At the time of writing, it offers the following commands: \begin{itemize}
- \item \verb|list| command lists all LRs.
- \item \verb|lock-all| command locks all LRs.
- \item \verb|unlock-all| command unlocks all LRs.
+ \item \verb|list| command lists all locking ranges.
+ \item \verb|lock-all| command locks all locking ranges.
+ \item \verb|unlock-all| command unlocks all locking ranges.
  \item \verb|mbrdone| command sets the MBRDone cell to the desired value.
  \item \verb|read-mbr| command prints the shadow MBR.
 \end{itemize}

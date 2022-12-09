@@ -28,7 +28,9 @@ Each of these SSCs is focused on a different use case. These SSCs are namely: \b
     \item \emph{Ruby SSC} is focused on data centres and server drives. Ruby SSCs may provide only a single global locking range, a weaker configuration of access control, and no pre-boot authentication support~\cite{tcg-ruby}. Replacing the older Enterprise subsystem.\todo{optionally PSK?}
 \end{itemize}
 % Is it used somewhere?
-The list of officially certified products and their SSCs can be found at TCG's Storage Certified Products web page\footnote{\url{https://trustedcomputinggroup.org/membership/certification/storage-certified-products/}}. The web page contains a list of products that were certified and requested to be published. At the time of writing, the list contains one product. The certified test house ULINK Technology offers its own list of certified disks on its web site\footnote{\url{https://ulinktech.com/tcg-certification-compliance-test-suite-list/}}. Some data protection solutions also provide a list of supported drives with their SSCs. However, in all of those cases, the listed drives implement mainly only Opal, Pyrite or Enterprise SSCs. We have not been able to find any listings of Opalite or Ruby SSCs, which we suspect is mostly because of the short length of existence in the case of Ruby SSC, and being only a simplified version of other SSC in the case of Opalite SSC.
+The list of officially certified products and their SSCs can be found at TCG's Storage Certified Products web page\footnote{\url{https://trustedcomputinggroup.org/membership/certification/storage-certified-products/}}. The web page contains a list of products that were certified and requested to be published. 
+At the time of writing, the list contains one product. The certified test house ULINK Technology offers its own list of certified disks on its web site\footnote{\url{https://ulinktech.com/tcg-certification-compliance-test-suite-list/}}. 
+Some data protection solutions also provide a list of supported drives with their SSCs. However, in all of those cases, the listed drives implement mainly only Opal, Pyrite or Enterprise SSCs. We have not been able to find any listings of Opalite or Ruby SSCs, which we suspect is mostly because of the short length of existence in the case of Ruby SSC, and being only a simplified version of other SSC in the case of Opalite SSC.
 
 
 Other than the Core and SSC standards defining the fundamentals of the devices, there are defined also Feature Sets. These Feature Sets expand the standards with less fundamental features. Some of those are 
@@ -73,7 +75,7 @@ A \emph{Trusted Peripheral} (TPer) is a component located on the disk that provi
 TPer mediates the communication between its Security Providers and the host.
 In order to maintain the state of the device, tables are used.
 There are two types of tables: byte tables, consisting of raw bytes, and object tables, with defined columns and rows, called objects.
-Each template defines its tables, such as the key tables containing DEKs, or the meta table called the Table table, which contains information about all the other tables in the SP.
+Each template defines its tables, such as the key tables containing DEKs, or the meta table called the Table table, which contains information about persistent tables.
 Although the Core standard specifies a way to create new tables or delete existing ones, this feature is not required by the Opal standard.
 
 \emph{Security Provider} (SP) is defined as a set of tables, methods and access control. SPs are derived from a set of templates, which define a set of tables and methods aimed at one functionality, a subset of which the SP implements. The templates are described more closely in a later Section~\ref{templates}.
@@ -679,23 +681,23 @@ Locking SP shared the Base Template and Opal-specific tables with Admin SP, but 
 \subsection{Locking range}
 \label{locking_range}
 
-The \emph{locking range} (LR) feature gives the user a way to specify an LBA range on the disk that can be locked independently on the rest of the disk. Each locking range also has its own ACE to control who can lock and unlock the range. Because each LR is also encrypted using its own DEK, it is possible to re-generate a new DEK for a single LR, discarding data of only one LR.
+The \emph{locking range} (LR) feature gives the user a way to specify an LBA range on the disk that can be locked independently on the rest of the disk. Each locking range also has its own ACE to control who can lock and unlock the range. Because each locking range is encrypted using its own DEK, it is possible to re-generate a new DEK for a single locking range, discarding data only within it.
 
 
 There also always exists a special range called the global locking range that covers any area on the disk that is not already covered by a regular locking range.
 
-In order to control the access to the data on a disk covered by a specific locking range, the Locking table contains columns ReadLockEnabled, WriteLockEnabled, ReadLocked, and WriteLocked. The data inside the LR cannot be read when ReadLockEnabled and ReadLocked are both set to true. Otherwise, the LR range is locked, and the data cannot be read. Similarly, for writing and WriteLockEnabled and WriteLocked. The separation of the locking right into the LockEnabled and Locked column gives the ability to have separate ACE for the LockEnabled column, meaning that, for example, an admin can decide that the user can only lock reading for a specific LR but not writing. 
+In order to control the access to the data on a disk covered by a specific locking range, the Locking table contains columns ReadLockEnabled, WriteLockEnabled, ReadLocked, and WriteLocked. The data inside the locking range cannot be read when ReadLockEnabled and ReadLocked are both set to true. Otherwise, the locking range is locked, and the data cannot be read. Similarly, for writing and WriteLockEnabled and WriteLocked. The separation of the locking right into the LockEnabled and Locked column gives the ability to have separate ACE for the LockEnabled column, meaning that, for example, an admin can decide that the user can only lock reading for a specific locking range but not writing. 
 
-Each locking range also has a defined column, LockOnReset containing a list of types of resets on which the LR gets locked. 
+Each locking range also has a defined column, LockOnReset containing a list of types of resets on which the locking range gets locked. 
 % Although there are defined types such as HotPlug (which is not really defined anywhere, but we suspect that it corresponds to the ATA Hot Plug reset)... Opal requires the support of only the Power Cycle, Programmatic\footnote{Activated by TPER\_RESET, command on TPer layer.} and optionally Hardware Reset reset.
-For Opal devices, reset Power Cycle must always be selected, and Programmatic reset can be selected additionally. The last reset type Opal defines for the drives is the optional Hardware Reset. All of these resets are defined in the TCG SIIS specification~\cite{tcg-siis}, includes a mapping of each of those errors to a particular event depending on the disk interface.\todo[color=green]{maybe what they are?}
+For Opal devices, the reset type Power Cycle must always be selected, and the Programmatic reset type can be selected additionally. The last reset type Opal defines for the drives is the optional Hardware Reset. All of these resets are defined in the TCG SIIS specification~\cite{tcg-siis}, includes a mapping of each of those errors to a particular event depending on the disk interface.\todo[color=green]{maybe what they are?}
 
 \subsection{Single User Mode}
 
 In many cases, it might be desirable to prevent admins from accessing user data, even though the admins generally have more competence. 
 The Single User Mode Feature Set~\cite{tcg-sum} defines a way to achieve this using a \emph{Single User Mode}.
-After activating Single User Mode, only a single User authority is capable of changing their authority object (this includes changing their PIN), changing the proprieties of LRs assigned to them (which includes the lock state of the LR) and generating new keys for those LRs.
-The only actions available to the Admin authorities related to that LR are destructive actions.
+After activating Single User Mode, only a single User authority is capable of changing their authority object (this includes changing their PIN), changing the proprieties of locking ranges assigned to them (which includes the lock state) and generating new keys for those locking ranges.
+The only actions available to the Admin authorities related to that locking range are destructive actions.
 
 % feature set that ``locks'' the admin out --- admin can do only destructive actions upon the locking range, and only the user can actually unlock it
 
@@ -706,7 +708,7 @@ This feature enables the disk to provide a fake master boot record (MBR). Instea
 This feature is controlled using tables \verb|MBR|, a byte table containing the data to be presented while the shadowing is active, and \verb|ControlMBR|, an object table used to control the shadowing. Table \verb|ControlMBR| one row with columns \verb|Enable|, \verb|Done|, and \verb|MBRDoneOnReset|.
 When \verb|Enable| is true and \verb|Done| is false, the shadowing is active, and the data from \verb|MBR| table can be read from the disk. The column \verb|MBRDoneOnReset| specifies a list of types of resets during which the \verb|Done| is set to false.
 
-\todo{maybe specify reset types separately, in separate section, rn they are defined in the LR section, I think it's fine???}
+\todo{maybe specify reset types separately, in separate section, rn they are defined in the locking range section, I think it's fine???}
 
 % The minimal maximum size of the shadow MBR seems to be 0x08000000 bytes ($\sim$134 MB).
 
@@ -773,10 +775,13 @@ The individual implemented ioctl requests for Opal functionality and their funct
 \item \verb|SET_PW| command changes the password of the selected Locking SP authority using the admin password.
 \item \verb|ACTIVATE_USR| command enables the specified user in the Opal tables.
 \item \verb|REVERT_TPR| command reverts the TPer to the factory state using the SID authority.
-\item \verb|LR_SETUP| command sets the position of LR and enables or disables the locking of reading or writing for that LR.
-\item \verb|ADD_USR_TO_LR| command sets the ACE for locking and unlocking to the designated user. Contrary to the name, this request does not actually add a user and instead replaces any existing one with the new one. % adds a user to the LR ACE. ...\verb|l_state == OPAL_RW| means writing ace...  (TODO: they seem to set it to "\verb#(user_uid || user_uid)#"??? why? bug? -> MRE is \verb|opal_util_linux.c|, only used last assigned to LR can control it, does (not) work on all test disks
+\item \verb|LR_SETUP| command sets the position of locking range and enables or disables the locking of reading or writing for that locking range.
+\item \verb|ADD_USR_TO_LR| command sets the ACE for locking and unlocking to the designated user. Contrary to the name, this request does not actually add a user and instead replaces any existing one with the new one. % adds a user to the locking range ACE. ...\verb|l_state == OPAL_RW| means writing ace...  (TODO: they seem to set it to "\verb#(user_uid || user_uid)#"??? why? bug? -> MRE is \verb|opal_util_linux.c|, only used last assigned to locking range can control it, does (not) work on all test disks
 \item \verb|ENABLE_DISABLE_MBR| command changes the \verb|Enable| column of the \verb|MBRControl| table. % TODO: write about MBR in a generic chapter.
-\item \verb|ERASE_LR| command calls the erase method defined in Single User Mode Feature Set~\cite{tcg-sum}. This method not only destroys the data in the locking range but also resets the assigned user authority of the locking range and the user's password. This is required since a Single User Mode protects these values from change by authorities other than the assigned user.
+\item \verb|ERASE_LR| command calls the erase method defined in Single User Mode Feature Set~\cite{tcg-sum}. 
+% This method not only destroys the data in the locking range but also resets the assigned user authority of the locking range and the user's password. 
+This method not only destroys the data in the locking range but also resets its assigned user authority and the user authority's password. 
+This is required since a Single User Mode protects these values from change by authorities other than the assigned user using regular means.
 % calls the erase method, 00 00 06 00 00 08 03, can't find it in Opal and in core it's "reserved for SSC", ... it's in single user mode standard --- not only destroys data, also removes pin and user authority (for SUM).
 \item \verb|SECURE_ERASE_LR| command re-generate the data encryption key of a range to destroy the previous one.
 \item \verb|PSID_REVERT_TPR| command resets the TPer to the factory state using PSID.

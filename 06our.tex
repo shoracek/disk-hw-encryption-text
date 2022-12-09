@@ -46,7 +46,7 @@ As of right now, the utility provides access to the following commands:
     \item \verb|psid_revert| command performs PSID revert using the Revert method as the PSID authority~\cite{tcg-psid}, resetting the device into the factory state.
     \item \verb|setup_tper| command takes ownership of the TPer by setting the password of the SID authority to the chosen value.\todo{(also enables programmatic reset, but that's to change, ... maybe)}
     \item \verb|setup_user| command enables Locking SP's user authority and sets its password.
-    \item \verb|setup_range| command enables the locking range and sets up its ReadLocked and WriteLocked ACL and its other parameters, such as the range of the locking range, ReadLockEnabled, and WriteLockEnabled.
+    \item \verb|setup_range| command enables the locking range and sets up its ReadLocked and WriteLocked ACL and its other parameters, such as its position, length, ReadLockEnabled, and WriteLockEnabled.
     \item \verb|unlock| command sets the ReadLocked and WriteLocked columns of a locking range, locking or unlocking the range for reading or writing.
     \item \verb|reset| command sends the TPER\_RESET command to the device~\cite{tcg-storage-core}.
 \end{itemize}
@@ -54,7 +54,7 @@ As of right now, the utility provides access to the following commands:
 An example of usage of the \verb|control| utility can be seen in Figure~\ref{fig:control_output}, where we present a basic use case scenario.
 
     \begin{lstlisting}[language=bash,caption={Usage of the \texttt{control} utility},label={fig:control_output},keywordstyle=\color{black}]
-# Reset the device to the factory state.
+# Revert the device to the factory state.
 ./control psid_revert /dev/sda                 \
     --verify-pin ${PSID}
 # Take ownership over the device.

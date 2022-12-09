@@ -54,7 +54,7 @@ However, the Opal standard does not mandate secure messaging and the only author
 % These features are defined in the Core standard under secure messaging and as a method of authentication, respectively. 
 
 
-% opal does not mandate secure messaging, which would allow encrypted communication, which would also require cold boot attack to acquire the encryption key, to get access to current session. But secure messaging is relevant only to the management of the disk, not to the direct reading writing, so as long as the LR would be unlocked this would not help........\todo{.........}
+% opal does not mandate secure messaging, which would allow encrypted communication, which would also require cold boot attack to acquire the encryption key, to get access to current session. But secure messaging is relevant only to the management of the disk, not to the direct reading writing, so as long as the locking range would be unlocked this would not help........\todo{.........}
 
 
 
@@ -142,7 +142,7 @@ The Core standard introduces HotPlug as one of the reset types. This event might
 % \todo{
 % In the Core standard~\cite{tcg-storage-core}, there exists a reset type called HotPlug. 
 % Although this reset type is not described closer than the name in the standards, it most likely refers to the ATA/NVMe? hot plug TODO\cite{TODO}... 
-% Using this reset type, it could possible to set an LR to lock when a hot plug is detected. However, as this reset type is not mandatory (nor optional) for Opal devices, and none of our Opal devices implemented it, we were not able to examine this solution further.
+% Using this reset type, it could possible to set an locking range to lock when a hot plug is detected. However, as this reset type is not mandatory (nor optional) for Opal devices, and none of our Opal devices implemented it, we were not able to examine this solution further.
 % However, even if the device would implement the HotPlug reset type, using it to prevent the hot plug attack would not be advisable as the hot-plugging process could be disabled in the attacker's system.
 
 % There exist tools for that 
@@ -172,7 +172,7 @@ This might include attacks such as using vendor commands to read the disk direct
 As can be seen from the previous Subsection~\ref{attack_rng}, the implementation of the interface is not perfect for some of our tested disks. Even though issues like the disk expecting a different type of format are not directly connected to security in our case, such problems might be a sign of other issues possibly related to security.
 % Something like non-security issues might very likely be a sign of possible security issues, so don't take those problem that we found lightly! Maybe also something that more information can be found in the data chapter or something like that.
 
-This might be especially a problem if such a malfunctioning interface gives its user a false sense of confidence. While testing our disks, we found several interface flaws with Kingston KC600. One such flaw is the fact that the disk accepts any value as a reset type. While specifying types of resets that should lock a specific interface, it is possible to specify any type, not only types that are not supported but also types which are not even defined in the standards. This means that after ``successfully'' setting LR to be reset after a hot plug event, it might never actually be locked once such an event happens.
+This might be especially a problem if such a malfunctioning interface gives its user a false sense of confidence. While testing our disks, we found several interface flaws with Kingston KC600. One such flaw is the fact that the disk accepts any value as a reset type. While specifying types of resets that should lock a specific interface, it is possible to specify any type, not only types that are not supported but also types which are not even defined in the standards. This means that after ``successfully'' setting locking range to be reset after a hot plug event, it might never actually be locked once such an event happens.
 
 \todo[color=green]{rethink the subsection name., i think now it is good enough.... maybe}
 

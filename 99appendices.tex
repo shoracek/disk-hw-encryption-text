@@ -164,7 +164,7 @@ Each command requires the disk file to be specified and also one or more options
 % \end{lstlisting}
 
 \begin{lstlisting}[language=bash,caption=Workflow with \texttt{control} utility,label={lst:control_workflow},keywordstyle=\color{black}]
-# Reset the device to the factory state.
+# Revert the device to the factory state.
 ./control psid_revert /dev/sda                 \
     --verify-pin ${PSID}
 # Take ownership over the device, activating 
