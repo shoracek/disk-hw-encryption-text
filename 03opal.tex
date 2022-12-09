@@ -25,7 +25,8 @@ Each of these SSCs is focused on a different use case. These SSCs are namely: \b
     \item \emph{Opal SSC} is targeted at corporate and personal usage. As this is the most available subsystem, it will be the target of our focus and be described more closely in the rest of this chapter.
     \item \emph{Opalite SSC} is simplified Opal. Does not mandate features such as locking ranges, decreases the minimal number of admin and user authorities, or additional tables to store arbitrary data tables~\cite{tcg-opalite}. % smaller datastore also, i think
     \item \emph{Pyrite SSC} is encryption-less Opalite. However, it does not mandate encryption of data saved on disk and instead may offer only logical access control~\cite{tcg-pyrite}.
-    \item \emph{Ruby SSC} is focused on data centres and server drives. Ruby SSCs may provide only a single global locking range, a weaker configuration of access control, and no pre-boot authentication support~\cite{tcg-ruby}. Replacing the older Enterprise subsystem.\todo{optionally PSK?}
+    \item \emph{Ruby SSC} is focused on data centres and server drives. Ruby SSCs may provide only a single global locking range, a weaker configuration of access control, and no pre-boot authentication support~\cite{tcg-ruby}. It supersedes the older Enterprise SSC.
+    \todo{optionally PSK?}
 \end{itemize}
 % Is it used somewhere?
 The list of officially certified products and their SSCs can be found at TCG's Storage Certified Products web page\footnote{\url{https://trustedcomputinggroup.org/membership/certification/storage-certified-products/}}. The web page contains a list of products that were certified and requested to be published. 
@@ -598,7 +599,11 @@ Even though the templates from which the Admin SP consists define many more meth
 \subsection{Tables}
 \label{admin_sp_tables}
 
-Similarly to the methods, the Opal standard does also not require every table defined by the template to be implemented. Instead, only a selected few are required.
+% The Opal standard does not require the presence of every table defined by the templates. Similarly to the methods, only a selection of tables is required to be implemented.
+
+The Opal standard does not require every table defined by the templates to be implemented. Similarly to the methods, only a selection of tables must be present.
+
+% Similarly to the methods, the Opal standard does also not require every table defined by the template to be implemented. Instead, only a selected few are required.
 
 \begin{itemize}
     \item Base Template tables:
@@ -642,7 +647,9 @@ The description of methods and tables that follows is specific for Opal SSC and 
 
 \subsection{Methods}
 
-Locking SP shares the Base Template and Crypto Template methods with Admin SP and also adds Locking Template methods.
+Locking SP shares the Base Template and Crypto Template methods with Admin SP. However, it also additionally adds the Locking Template methods.
+
+\newpage
 
 % Some of the methods Opal mandates for Locking SP are shared (``Next'', ``GetACL'', ``Get'', ``Set'', ``Authenticate'', ``Random''), but there are also two new ones:
 

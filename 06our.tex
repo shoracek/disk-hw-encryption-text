@@ -6,6 +6,9 @@
 
 In order to be able to study the self-encrypting drives, specifically the most popular Opal drives, at a closer level, we have implemented a toolset for controlling and inspecting Opal devices. 
 We have focused on implementation that would not require any additional tooling or libraries and would allow as much control over the communication with the Opal device. This approach allows the project to be not only used on a system without introducing a plethora of additional packages but also for our code to be used in other projects without needlessly increasing the number of dependencies.
+
+The code of the toolset is available from its GitHub repository\footnote{\url{https://github.com/shoracek/opal-toolset}} under the MIT License.
+
 \todo{pridat --help do prilohy}
 
 \section{Structure}
@@ -49,6 +52,7 @@ As of right now, the utility provides access to the following commands:
     \item \verb|setup_range| command enables the locking range and sets up its ReadLocked and WriteLocked ACL and its other parameters, such as its position, length, ReadLockEnabled, and WriteLockEnabled.
     \item \verb|unlock| command sets the ReadLocked and WriteLocked columns of a locking range, locking or unlocking the range for reading or writing.
     \item \verb|reset| command sends the TPER\_RESET command to the device~\cite{tcg-storage-core}.
+    \item \verb|regenerate_key| command re-generates the DEK of the specified locking range.
 \end{itemize}
 
 An example of usage of the \verb|control| utility can be seen in Figure~\ref{fig:control_output}, where we present a basic use case scenario.
@@ -62,14 +66,16 @@ An example of usage of the \verb|control| utility can be seen in Figure~\ref{fig
     --assign-pin 0000
 # Create a user authority.
 ./control setup_user /dev/sda                  \ 
-    --user 1 --verify-pin 0000                 \
-    --assign-pin 1111
+    --verify-pin 0000                          \
+    --user 1 --assign-pin 1111
+    
 # Create a locking range.
 ./control setup_range /dev/sda                 \ 
+    --verify-pin 0000                          \
     --locking-range 1                          \
     --locking-range-start 0                    \
     --locking-range-length 512                 \
-    --user 1 --verify-pin 0000
+    --user 1 
 # Lock reading of the locking range.
 ./control unlock /dev/sda                      \
     --user 1 --verify-pin 1111                 \ 
@@ -92,7 +98,7 @@ The Level 2 Discovery, on the other hand, is more complicated.
 % This modified version will try to include every table in the TPer.
 For Level 2 Discovery, we would like to include as many tables as possible. The Opal standard defines the mandatory and optional tables, yet we would like to include also any table that is vendor specific.
 We also have a few limiting factors that may limit the number of tables we will be able to read.
-First of all, we do not want to change the state of the device. This includes actions such as reverting the device to the factory state or taking ownership of it. Even if the state is potentially reversible without data loss, the risk of the disk not working correctly surpasses the potential gain from more information. This might notably affect the collection of information from the Locking SP if it is not activated
+First of all, we do not want to change the state of the device. This includes actions such as reverting the device to the factory state or taking ownership of it. Even if the state is potentially reversible without data loss, the risk of the disk not working correctly surpasses the potential gain from more information. This might notably affect the collection of information from the Locking SP if it is not activated.
 % ...e.g. tables of locking SP might be unavailable if it was not activated (but the SP will still be mentioned in the SP table of Admin SP).
 Another requirement is that no authorisation should be required. Instead, we will use the password-less Anybody authority. This again restricts the set of tables that are accessible. However, according to the definitions of access rights in the Opal standard~\cite{tcg-opal2}, this mainly affects secrets, such as passwords of Authorities or DEKs, and the current configuration of locking ranges, such as their start and length. Such information does not speak about the properties and capabilities of the device itself.
 
@@ -113,6 +119,11 @@ parse only the outermost ones. This means that, for example, for lists, we print
 % print it as bytes if the outermost is bytes
 % otherwise just print the bytes
 
+
+
+
+An example of the output of this process can be seen in Figure~\ref{fig:discovery_example}. Depicted there is a part of the output of this utility containing the start of the Table table's first row. The nested structure contains the outermost key corresponding to the Admin SP, followed by a key for the Table table and a key for its first row. 
+This first row holds metadata about the Table table, such as its name or the template that provides this table.
 
 
 \begin{figure}
@@ -140,9 +151,6 @@ parse only the outermost ones. This means that, for example, for lists, we print
     \label{fig:discovery_example}
 \end{figure}
 
-
-An example of the output of this process can be seen in Figure~\ref{fig:discovery_example}. Depicted there is a part of the output of this utility containing the start of the Table table's first row. The nested structure contains the outermost key corresponding to the Admin SP, followed by a key for the Table table and a key for its first row. 
-This first row holds metadata about the Table table, such as its name or the template that provides this table.
 
 \todo{maybe use better example? where the common name is not used}
 

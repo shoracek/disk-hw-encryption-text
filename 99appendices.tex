@@ -183,7 +183,8 @@ Each command requires the disk file to be specified and also one or more options
 # Enable first locking range and allow the 
 # two users to unlock it.
 ./control setup_range /dev/sda                 \
-    --verify-pin 0000 --locking-range 1        \
+    --verify-pin 0000                          \
+    --locking-range 1                          \
     --locking-range-start 0                    \ 
     --locking-range-length 512                 \
     --user 1 --user 2
@@ -198,7 +199,7 @@ Each command requires the disk file to be specified and also one or more options
 # Re-generate the key of the locking range,
 # erasing all its data.
 ./control regenerate_key /dev/sda              \
-     --locking-range=1 --verify-pin 0000
+    --verify-pin 0000 --locking-range=1
 \end{lstlisting}
 
 \chapter{Patterns in disk content}
