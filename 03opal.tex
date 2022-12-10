@@ -162,42 +162,6 @@ ComPacket is the outermost one. Each ComPacket contains data for communication u
 % \end{figure}
 
 
-\begin{figure}
-    \centering
-    \vspace{6mm}
-% \begin{bytefield}[bitwidth=0.11111\linewidth,bitheight=4.66em, bitformatting={\small}]{9}
-\begin{bytefield}[bitwidth=0.1\linewidth,bitheight=3.33em, bitformatting={\small}]{9}
- % \hspace*{-10mm}\vspace*{-2mm}  {Byte:}
- % \hspace*{-10mm}
- % \vspace*{-10mm}  \bitheader{0-8} \\
-\bitheader{0-8} \\
-\bitbox{1}{Call token} &
-\bitbox{8}{Invoking UID} \\ 
-\bitbox{8}{Method UID} &
-\bitbox{1}{\small Start List token} \\
-\bytefieldsetup{bitheight=2.5ex}%
-\wordbox[lrt]{1}{\vspace{3mm} arguments} \\
-\bytefieldsetup{bitheight=0ex}%
-\skippedwords \\
-\bytefieldsetup{bitheight=2.5ex}%
-\wordbox[lrb]{1}{} \\
-\bitbox{1}{\small End List token} &
-\bitbox{1}{\small End of Data token} &
-% \bitbox{5}{Status List}
-\bitbox{1}{\small Start List token} & 
-% \bitbox{1}{\scriptsize Trans-action Status Code} &
-\bitbox{1}{Status Code} &
-\bitbox{1}{00} &
-\bitbox{1}{00} &
-\bitbox{1}{\small End List token}
-\end{bytefield}
-
-\vspace{-86.6mm}\hspace*{-102mm} \small Byte:
-\vspace{ 82mm} %\hspace*{ 70mm} 
-    \caption{Format of method invocation}
-    \label{fig:format_of_method}
-    % \todo{why is the comment after bytefieldsetup needed??????????}
-\end{figure}
 
 % \begin{figure}
 %     \centering
@@ -237,7 +201,8 @@ ComPacket is the outermost one. Each ComPacket contains data for communication u
 % \end{figure}
 
 The commands of the lower layers to TPer and SPs and their respective responses are transported by the Data SubPackets in the form of methods. 
-These are expressed using a set of lexical tokens in a specific order, described by Figure~\ref{fig:format_of_method}.\todo[color=green]{maybe describe tokens? but that seems like a little bit too much,,, right?, maybe just simple, sequence, control, added lexical to make it obviious, good enought i guess}
+These are expressed using a set of lexical tokens in a specific order, described by Figure~\ref{fig:format_of_method}.
+% \todo[color=green]{maybe describe tokens? but that seems like a little bit too much,,, right?, maybe just simple, sequence, control, added lexical to make it obviious, good enought i guess}
 % Data SubPacket carries either the method call or method response. %can't there be something else?
 Other than the constant tokens such as call tokens or end list tokens, each method invocation contains Invoking UID, Method UID, arguments, and status code list.
 Invoking UID is used to identify which structure the method is invoked on. Other than tables and rows of tables, there are also special Invoking UIDs which can be used. These special Invoking UIDs are ThisSP, signifying the SP with which the current session is open, and SMUID, signifying the session manager.
@@ -245,6 +210,44 @@ Invoking UID is used to identify which structure the method is invoked on. Other
 Method UID specifies the method to be called. 
 Since SMUID methods are used for managing sessions, when the host is not connected to any of the SPs, SMUID methods cannot be found in the MethodID table of an SP.\todo{move this to later part since it stands out like a sore thumb, maybe?}
 Each method specifies its type of Invoking UID, whether it is a table, an object, or any of the special UIDs, and its parameters. There are two kinds of parameters: the required parameter, identified by its position, and the optional parameter, used in a structure using an integer to identify the parameter, followed by the data of the parameter.
+
+
+\begin{figure}
+    \centering
+    \vspace{6mm}
+% \begin{bytefield}[bitwidth=0.11111\linewidth,bitheight=4.66em, bitformatting={\small}]{9}
+\begin{bytefield}[bitwidth=0.1\linewidth,bitheight=3.33em, bitformatting={\small}]{9}
+ % \hspace*{-10mm}\vspace*{-2mm}  {Byte:}
+ % \hspace*{-10mm}
+ % \vspace*{-10mm}  \bitheader{0-8} \\
+\bitheader{0-8} \\
+\bitbox{1}{Call token} &
+\bitbox{8}{Invoking UID} \\ 
+\bitbox{8}{Method UID} &
+\bitbox{1}{\small Start List token} \\
+\bytefieldsetup{bitheight=2.5ex}%
+\wordbox[lrt]{1}{\vspace{3mm} arguments} \\
+\bytefieldsetup{bitheight=0ex}%
+\skippedwords \\
+\bytefieldsetup{bitheight=2.5ex}%
+\wordbox[lrb]{1}{} \\
+\bitbox{1}{\small End List token} &
+\bitbox{1}{\small End of Data token} &
+% \bitbox{5}{Status List}
+\bitbox{1}{\small Start List token} & 
+% \bitbox{1}{\scriptsize Trans-action Status Code} &
+\bitbox{1}{Status Code} &
+\bitbox{1}{00} &
+\bitbox{1}{00} &
+\bitbox{1}{\small End List token}
+\end{bytefield}
+
+\vspace{-86.6mm}\hspace*{-102mm} \small Byte:
+\vspace{ 82mm} %\hspace*{ 70mm} 
+    \caption{Format of method invocation}
+    \label{fig:format_of_method}
+    % \todo{why is the comment after bytefieldsetup needed??????????}
+\end{figure}
 
 There are two types of arguments: required arguments, which all have to occur in the specified order, and optional arguments, which can be left out. The optional arguments are identified by a preceding unsigned integer.
 
@@ -619,14 +622,14 @@ The Opal standard does not require every table defined by the templates to be im
 \end{itemize}
     \item Admin Template tables:
 \begin{itemize}
-    \item \emph{TPerInfo} table metadata about the TPer, versions, implemented SSCs, free space for issuance, ProgrammaticResetEnable
-    \item \emph{Template} table metadata about templates, number of instances
-    \item \emph{SP} table metadata about SPs, current life cycle, frozen status
+    \item \emph{TPerInfo} table contains metadata about the TPer, such as its version, implemented SSCs, or free space for issuance.
+    \item \emph{Template} table contains metadata about templates, such as the number of their instances.
+    \item \emph{SP} table contains metadata about SPs, such as their current life cycle or frozen status.
 \end{itemize}
 \begin{samepage}
     \item Opal additional tables:
 \begin{itemize}
-\item \emph{DataRemovalMechansim} table describes the mechanism for data removal, such as overwrite erase, block erase, or cryptographic erase
+\item \emph{DataRemovalMechansim} table describes the mechanism used for data removal, such as overwrite erase, block erase, or cryptographic erase.
 \end{itemize}
 \end{samepage}
 \end{itemize}
@@ -647,7 +650,7 @@ The description of methods and tables that follows is specific for Opal SSC and 
 
 \subsection{Methods}
 
-Locking SP shares the Base Template and Crypto Template methods with Admin SP. However, it also additionally adds the Locking Template methods.
+Locking SP shares the Base Template and Crypto Template methods with Admin SP. However, it also additionally provides the Locking Template methods.
 
 \newpage
 
@@ -673,10 +676,10 @@ Locking SP shared the Base Template and Opal-specific tables with Admin SP, but 
     \end{itemize}
     \item Locking Template tables:
     \begin{itemize}
-        \item \emph{LockingInfo} table metadata for locking mechanisms, such as the maximum number of locking ranges or supported types of encryption. 
+        \item \emph{LockingInfo} table contains metadata for locking mechanisms, such as the maximum number of locking ranges or supported types of encryption. 
         \item \emph{Locking} table contains the state of locking ranges, more closely described in Subsection~\ref{locking_range}.
-        \item \emph{MBRControl} table contains metadata for MBR shadowing (Enable, Done, DoneOnReset).
-        \item \emph{MBR} byte table containing the shadow MBR.
+        \item \emph{MBRControl} table contains metadata for MBR shadowing, such as Enable, Done, and DoneOnReset values.
+        \item \emph{MBR} byte table contains the shadow MBR.
         \item \emph{K\_AES\_128} and \emph{K\_AES\_256} tables contain the DEKs for each of the locking ranges. It can be accessed only by using the GenKey method.
     \end{itemize}
     \item Non-template tables:

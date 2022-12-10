@@ -43,24 +43,22 @@ e993f67588190fc5d6d0ef7c7febf1944c566e211ba10352
 
 The \verb|control| utility provides access to basic control over the device.
 The utility serves as a wrapper around the middle-level functions described earlier.
-As of right now, the utility provides access to the following commands:
+Currently, the utility provides access to the following commands:
 
 \begin{itemize}
-    \item \verb|psid_revert| command performs PSID revert using the Revert method as the PSID authority~\cite{tcg-psid}, resetting the device into the factory state.
     \item \verb|setup_tper| command takes ownership of the TPer by setting the password of the SID authority to the chosen value.\todo{(also enables programmatic reset, but that's to change, ... maybe)}
     \item \verb|setup_user| command enables Locking SP's user authority and sets its password.
     \item \verb|setup_range| command enables the locking range and sets up its ReadLocked and WriteLocked ACL and its other parameters, such as its position, length, ReadLockEnabled, and WriteLockEnabled.
     \item \verb|unlock| command sets the ReadLocked and WriteLocked columns of a locking range, locking or unlocking the range for reading or writing.
     \item \verb|reset| command sends the TPER\_RESET command to the device~\cite{tcg-storage-core}.
     \item \verb|regenerate_key| command re-generates the DEK of the specified locking range.
+    \item \verb|psid_revert| command performs PSID revert using the Revert method as the PSID authority~\cite{tcg-psid}, resetting the device into the factory state.
+
 \end{itemize}
 
-An example of usage of the \verb|control| utility can be seen in Figure~\ref{fig:control_output}, where we present a basic use case scenario.
+An example of usage of the \verb|control| utility can be seen in Listing~\ref{fig:control_output}, where we present a basic use case scenario.
 
     \begin{lstlisting}[language=bash,caption={Usage of the \texttt{control} utility},label={fig:control_output},keywordstyle=\color{black}]
-# Revert the device to the factory state.
-./control psid_revert /dev/sda                 \
-    --verify-pin ${PSID}
 # Take ownership over the device.
 ./control setup_tper /dev/sda                  \
     --assign-pin 0000
@@ -68,18 +66,21 @@ An example of usage of the \verb|control| utility can be seen in Figure~\ref{fig
 ./control setup_user /dev/sda                  \ 
     --verify-pin 0000                          \
     --user 1 --assign-pin 1111
-    
 # Create a locking range.
 ./control setup_range /dev/sda                 \ 
     --verify-pin 0000                          \
     --locking-range 1                          \
     --locking-range-start 0                    \
     --locking-range-length 512                 \
-    --user 1 
+    --user 1
 # Lock reading of the locking range.
 ./control unlock /dev/sda                      \
     --user 1 --verify-pin 1111                 \ 
     --locking-range 1 --read-locked 1
+# Unlock reading of the locking range.
+./control unlock /dev/sda                      \
+    --user 1 --verify-pin 1111                 \ 
+    --locking-range 1 --read-locked 0
 \end{lstlisting}
 
 
@@ -100,7 +101,14 @@ For Level 2 Discovery, we would like to include as many tables as possible. The 
 We also have a few limiting factors that may limit the number of tables we will be able to read.
 First of all, we do not want to change the state of the device. This includes actions such as reverting the device to the factory state or taking ownership of it. Even if the state is potentially reversible without data loss, the risk of the disk not working correctly surpasses the potential gain from more information. This might notably affect the collection of information from the Locking SP if it is not activated.
 % ...e.g. tables of locking SP might be unavailable if it was not activated (but the SP will still be mentioned in the SP table of Admin SP).
-Another requirement is that no authorisation should be required. Instead, we will use the password-less Anybody authority. This again restricts the set of tables that are accessible. However, according to the definitions of access rights in the Opal standard~\cite{tcg-opal2}, this mainly affects secrets, such as passwords of Authorities or DEKs, and the current configuration of locking ranges, such as their start and length. Such information does not speak about the properties and capabilities of the device itself.
+Another requirement is that no authorisation should be required. Instead, we will use the password-less Anybody authority. This again restricts the set of tables that are accessible. However, according to the definitions of access rights provided by the Opal standard~\cite{tcg-opal2}, this mainly affects the reading of personalised information.
+The personalised information may contain data requiring another authority to be read, such as the configuration of locking ranges or enabled authorities, but also data not directly readable by any authority, such as passwords or DEKs.
+Nonetheless, such personalised information is not relevant to the goal of finding information about the disk itself.
+
+
+% Such information does not speak about the properties and capabilities of the device itself.
+% Luckily, such information speaks only about the personalisation of the device and not about the properties and capabilities of the device itself. 
+% Luckily, since the restricted information is 
 
 \subsection{Implementation of disk properties discovery}
 
@@ -119,6 +127,7 @@ parse only the outermost ones. This means that, for example, for lists, we print
 % print it as bytes if the outermost is bytes
 % otherwise just print the bytes
 
+% \newpage
 
 
 
@@ -128,6 +137,7 @@ This first row holds metadata about the Table table, such as its name or the tem
 
 \begin{figure}
     \centering
+% \begin{lstlisting}[language=Python,caption={Excerpt of \texttt{discovery} output from Kingston KC600. Comments were added for clarity.},label={fig:discovery_example}]
 \begin{lstlisting}[language=Python]
 # Admin SP
  "0x0000020500000001": {
@@ -150,7 +160,6 @@ This first row holds metadata about the Table table, such as its name or the tem
     \caption{Excerpt of \texttt{discovery} output from Kingston KC600. Comments were added for clarity.}
     \label{fig:discovery_example}
 \end{figure}
-
 
 \todo{maybe use better example? where the common name is not used}
 

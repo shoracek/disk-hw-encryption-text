@@ -66,6 +66,12 @@ The newest Opal 2.02 also introduced reporting of the minor version in the Opal 
 % \caption{Comparison of versioning parameters}
 % \end{table}\todo{make narrower}
 
+
+As can be seen from Table~\ref{table:compare_versions}, none of the disks reports its minor version, required from the 2.02 version of the standard.
+Although Kingston KC600 might seem to be compatible with the 2.01 version, considering its features, it contains Interface Control Template. This template was deprecated in 2.01, so we will consider this disk to implement Opal~2.00.
+As the remainder of the disks have not implemented Interface Control Template, we will consider them to be implementing Opal~2.01.
+
+
 \begin{table}
 \small
 \begin{tabularx}{\textwidth}{lXXXXX}
@@ -82,10 +88,6 @@ Samsung 980         & yes & yes &     & n/a & 2.01       \\
 \caption{Comparison of attributes relevant to the version}
 \label{table:compare_versions}
 \end{table}
-
-As can be seen from Table~\ref{table:compare_versions}, none of the disks reports its minor version, required from the 2.02 version of the standard.
-Although Kingston KC600 might seem to be compatible with the 2.01 version, considering its features, it contains Interface Control Template. This template was deprecated in 2.01, so we will consider this disk to implement Opal~2.00.
-As the remainder of the disks have not implemented Interface Control Template, we will consider them to be implementing Opal~2.01.
 
 \section{Inaccurate information}
 
